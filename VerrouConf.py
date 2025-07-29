@@ -3,84 +3,86 @@ from pathlib import Path
 import copy
 
 class ConfigVerrou(Config):
-    def __init__(self, nbRun=None):
-        super().__init__(nbRun)
-        self.InPath = ""
-        self.OutPath = ""
-        self.dir = ""
-        self.all_lines = []
-        self.ready = False
-    
-    def setInLinePath(self, path : str):
-        self.InPath = path
-    
-    def setOutLinePath(self, path : str):
-        self.OutPath = path
+    def __init__(self, workingdir : Path, RelrunPath : Path, RelCmpPath : Path):
 
-    def setDir(self, dir : str):
-        self.dir = dir
+        if not isinstance(workingdir, Path):
+            raise TypeError(f"workingdir must be of class Path, not {type(workingdir).__name__}")
+        if not isinstance(RelrunPath, Path):
+            raise TypeError(f"runPath must be of class Path, not {type(RelrunPath).__name__}")
+        if not isinstance(RelCmpPath, Path):
+            raise TypeError(f"CmpPath must be of class Path, not {type(RelCmpPath).__name__}")
+        super().__init__(1)
+
+        # Permet de travailler proprement dans le dossier reservé à cette config (existera dans tous les conteneurs)
+        self.workdir = workingdir
+        self.runPath = RelrunPath
+        self.CmpPath = RelCmpPath
+
+    
+    def parseGenRunFile(self):
+        """
+        Fais le run de référence, le stocke dans workingdir/ref, en même temps génère le fichier lignes.source dans le working directory.
+
+
+        Raises:
+            RuntimeError: Si le run de référence échoue.
+        """
+        import subprocess
+        # Variables d’environnement pour le run de référence
+        env = os.environ.copy()
+        env["VERROU_ROUNDING_MODE"] = "nearest"
+        env["VERROU_FLOAT"] = "no"
+        env["VERROU_UNFUSED"] = "no"
+        env["VERROU_MCA_MODE"] = "ieee"
+
+        # Lancement de l’exécutable
+        ref_result = subprocess.run(
+                                    ["bash", "./parse.sh", str(self.workdir), str(self.runPath)], # parse.sh prend un dossier qui contient un executable et génère le parsing des \
+                                    env = env                                                     # lignes dans lignes.source et la configuration de référence dans ref/result.dat
+                                    )                                                           
+
+        # vérification de la bonne execution
+        if ref_result.returncode != 0:
+            raise RuntimeError("Erreur lors de l'execution du run de référence, non perturbé")
 
     def generateSearchSpace(self) -> list:
-        In = self.dir + "/" + self.InPath
-        if self.ready:
-            all_lines = self.all_lines
-        else: 
-            with open(In, 'r') as f:
-                all_lines = f.readlines()
-        N = len(all_lines)
-        return [i for i in range(N)]
+        """
+        Génère un searchspace à partir d'entiers
+
+        Returns:
+            list: ensemble des lignes perturbables
+        Raises:
+            FileNotFoundError: Si le parsing des lignes n'a pas été généré
+        """
+        In = self.workdir / self.runPath
+        try:
+            with open(In, 'r') as file:
+                all_lines = file.readlines()
+        except FileNotFoundError:
+            raise FileNotFoundError("Cannot genrate a searchspace without the lines.source file, (Maybe you tried to call this function in a task and not in client ?)")
+
+        return all_lines
     
-    def PrepareForArmoniK(self):
-        In = self.dir + "/" + self.InPath
-        with open(In, 'r') as f:
-            all_lines = f.readlines()
-        self.all_lines = all_lines
-        self.ready = True
     
-    def copy(self) -> "Config":
-        res = ConfigVerrou(self.nbRun)
-        res.InPath = self.InPath
-        res.OutPath = self.OutPath
-        res.ready = self.ready
-        res.all_lines = copy.deepcopy(self.all_lines)
-        return res
-
-    def writeSource(self, lst : list):
-        if not self.InPath:
-            raise RuntimeError("verrou Config : Test lancé sans InPath")
-        if not self.OutPath:
-            raise RuntimeError("verrou Config : Test lancé sans OutPath")
-        In = self.dir + "/" + self.InPath
-        out = self.dir + "/" + self.OutPath
-
-        # On lit l'entièreté des lignes
-        if self.ready:
-            all_lines = self.all_lines
-        else:
-            try:
-                with open(In, 'r') as f:
-                    all_lines = f.readlines()
-            except:
-                raise RuntimeError("Configuration non prête à l'export, la lecture des lignes a échouée")
-
-        # on selectionnes celles a perturber
-        selected_lines = [all_lines[i] for i in lst if 0 <= i < len(all_lines)]
-
-        # on écrit
-        with open(out, 'w') as f:
-            f.writelines(selected_lines)
+    def copy(self) -> "ConfigVerrou":
+        return ConfigVerrou(self.workdir, self.runPath, self.CmpPath)
 
     def Test(self, subspace: list) -> bool:
-        self.writeSource(subspace)
+        
         import os
         import subprocess
 
-        # Dossier pour stocker les résultats
-        REF_DIR = self.dir + "/ref"
-        PERTURBED_DIR = self.dir + "/pert"
-        LIGNE_FICHIER = self.dir + "/" + self.OutPath  # Doit être au bon format (3 colonnes)
+        #Préparation du fichier des lignes à perturber pour verrou
+        fout = self.workdir / "aperturber"
+        with open(fout, 'w') as f:
+            f.writelines(subspace)
 
-        # Définir les variables d’environnement pour le run perturbé
+        # Dossier pour stocker les résultats
+        REF_DIR = str(self.workdir / "/ref")
+        PERTURBED_DIR = str(self.workdir / "/pert")
+        LIGNE_FICHIER = str(fout) 
+
+        # Définition des variables d’environnement pour le run perturbé
         env = os.environ.copy()
         env["VERROU_SOURCE"] = LIGNE_FICHIER
         env["VERROU_ROUNDING_MODE"] = "random"
