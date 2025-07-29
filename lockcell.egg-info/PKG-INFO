@@ -1,3 +1,13 @@
+Metadata-Version: 2.4
+Name: lockcell
+Version: 0.6.0
+Summary: Add your description here
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: graphviz>=0.21
+Requires-Dist: numpy>=2.2.6
+Requires-Dist: pymonik
+
 Next updates incoming :
 - Optimiser les cas où on divise et qu'il y a des sets de taille 1
 - Ne pas rappeller des fake nTask dans l'analyser et être plus malin
