@@ -6,3 +6,4 @@ Next updates incoming :
 - Passer de copy à __copy__ dans les config
 - Implémenter la stocahsticité
 - Gérer un cache
+- Implémenter le passage des fichiers DD_RUN et DD_CMP
