@@ -54,14 +54,17 @@ Viz = MultiViz(active=printgraph)
 #config = controllers.TestConfig([[[56], 0.3], [[94], 0.3], [[42, 40], 0.5], [[118, 114, 115], 0.5], [[76, 80, 78, 82], 0.5]])# EXCELLENT EXEMPLE avec N = 2**7
 #config = controllers.TestConfig([[[0, 2, 4, 6], 0.5]])
 #config = controllers.TestConfig([([51], 0.3), ([1], 0.3), ([12, 11], 0.5), ([4, 2, 0], 0.5), ([63, 62, 61], 0.5), ([15, 10, 6], 0.5), ([20, 17, 16], 0.5), ([46, 40, 35], 0.5)])
-config = VerrouConf.ConfigVerrou("./verrou", "DD_RUN", "DD_CMP.py")
+config = VerrouConf.ConfigVerrou("./src/lockcell/verrou", "DD_RUN", "DD_CMP.py")
 config.setMode("Analyse")
 #config.GenProb(N, (2, 1, 0, 0.3), (1, 2, 2, 0.5), (6, 3, 4, 0.5)) # (combien, taille, écart type)
 nbRunTab = [1, 4, 6]
 input("press to continue...")
 #res = controllers.SRDDMIN(searchspace, nbRunTab, say2, config)
 config.parseGenRunFile()
-res = controllers.RDDMIN(config.generateSearchSpace(), say, finalSay, config, Viz)
+searchspace = config.generateSearchSpace()
+from pathlib import Path
+config.workdir = Path("./verrou")
+res = controllers.RDDMIN(searchspace, say, finalSay, config, Viz)
 print(res)
 
 if printgraph:

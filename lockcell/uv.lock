@@ -242,7 +242,7 @@ dependencies = [
 requires-dist = [
     { name = "graphviz", specifier = ">=0.21" },
     { name = "numpy", specifier = ">=2.2.6" },
-    { name = "pymonik", directory = "../PymoniK/pymonik" },
+    { name = "pymonik", directory = "../PymonikLock/pymonik" },
 ]
 
 [[package]]
@@ -405,7 +405,7 @@ wheels = [
 
 [[package]]
 name = "pymonik"
-source = { directory = "../PymoniK/pymonik" }
+source = { directory = "../PymonikLock/pymonik" }
 dependencies = [
     { name = "armonik" },
     { name = "cloudpickle" },
