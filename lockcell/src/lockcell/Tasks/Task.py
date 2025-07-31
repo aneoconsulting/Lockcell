@@ -11,11 +11,9 @@ import numpy as np
 from typing import List, Tuple, Optional, Union
 from . import TaskEnv
 
-onArmoniK = True
-
 ### NTask
 
-@task(active=onArmoniK)
+@task
 def nTask(delta : list, n : Union[int, List[list]], config :TaskEnv.Config, me, Recurse = True, Result: Optional[bool] = None, oneSub : List[int] = []):
     
     ### PrintGraph ###
@@ -97,7 +95,7 @@ def nTask(delta : list, n : Union[int, List[list]], config :TaskEnv.Config, me, 
 ### NAGG
 #########################################################################################################
 
-@task(active=onArmoniK)
+@task
 def nAGG(subdiv : List[list], answers : List[Tuple[List[list] | None, bool]], n : int, config :TaskEnv.Config, me, oneSub : List[int] = []):
 
     ### PrintGraph ###
@@ -224,7 +222,7 @@ def nAGG(subdiv : List[list], answers : List[Tuple[List[list] | None, bool]], n 
 ### NAGG2
 #########################################################################################################
 
-@task(active=onArmoniK)
+@task
 def nAGG2(subdiv : List[list], answers : List[Tuple[List[list] | None, bool]], n : int, config : TaskEnv.Config, me, oneSub : List[int] = []):
 
     ### PrintGraph ###
@@ -310,7 +308,7 @@ def nAGG2(subdiv : List[list], answers : List[Tuple[List[list] | None, bool]], n
 ### NAnalyser
 #########################################################################################################
 
-@task(active=onArmoniK)
+@task
 def nAnalyser(subdiv : List[list], answers : List[Tuple[List[list] | None, bool]], n : int, config : TaskEnv.Config, me, oneSub : List[int] = []):
 
     ### PrintGraph ###
@@ -533,7 +531,7 @@ def nAnalyser(subdiv : List[list], answers : List[Tuple[List[list] | None, bool]
 ### NAnalyserDown
 #########################################################################################################
 
-@task(active=onArmoniK)
+@task
 def nAnalyserDown(subdiv : List[list], answers : List[Tuple[List[list] | None, bool]], conj : List[Optional[int]], n : int, config : TaskEnv.Config, me):
 
     ### PrintGraph ###
@@ -859,7 +857,7 @@ def nAnalyserDown(subdiv : List[list], answers : List[Tuple[List[list] | None, b
 ### Corrector
 #########################################################################################################
 
-@task(active=onArmoniK)
+@task
 def Corrector(mode : int, subdiv : List[list], answers : List[Tuple[List[list] | None, bool]], matrix : List[List[bool]], n : int, config : TaskEnv.Config, me):
     ### PrintGraph ###
     gPrint = (me != None)
