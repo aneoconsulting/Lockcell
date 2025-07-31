@@ -9,7 +9,6 @@ import controllers
 from Tasks import TaskEnv
 from graphViz import MultiViz
 import VerrouConf
-
 import cloudpickle # Install cloudpickle
 cloudpickle.register_pickle_by_value(TaskEnv) # Pour les modules de ton code tu fait du sort que ca soit pickler par value
 cloudpickle.register_pickle_by_value(controllers) # Pour les modules de ton code tu fait du sort que ca soit pickler par value
@@ -17,6 +16,7 @@ cloudpickle.register_pickle_by_value(VerrouConf) # Pour les modules de ton code 
 
 
 printgraph = False
+
 N = 2**6
 searchspace = [i for i in range(N)]
 
@@ -49,6 +49,7 @@ def say2(res):
 def finalSay(res, i):
     print("\n" + "-"*80 +"\n" + "-"*80  + "\n" + "Recursions : " + i.__str__() + " | Total results : " + parseRes(res).__str__()  +"\n" + "-"*80  +"\n" + "-"*80)
 
+
 # Problème d'implémentation de la stochasticité, en effet les 1 minimaux d'un période ne failent pas forcément à la suivante il faut un cache ou alors transmette le fait que ce truc ne marche pas
 Viz = MultiViz(active=printgraph)
 #config = controllers.TestConfig([[[56], 0.3], [[94], 0.3], [[42, 40], 0.5], [[118, 114, 115], 0.5], [[76, 80, 78, 82], 0.5]])# EXCELLENT EXEMPLE avec N = 2**7
@@ -63,6 +64,7 @@ input("press to continue...")
 config.parseGenRunFile()
 res = controllers.RDDMIN(config.generateSearchSpace(), say, finalSay, config, Viz)
 print(res)
+
 
 if printgraph:
     Viz.aff_all()
