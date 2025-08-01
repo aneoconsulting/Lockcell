@@ -1,6 +1,7 @@
 from Tasks import Config
 from pathlib import Path
 from typing import Union
+import constants
 import copy
 
 class ConfigVerrou(Config):
@@ -47,7 +48,7 @@ class ConfigVerrou(Config):
 
         # Lancement de l’exécutable
         ref_result = subprocess.run(
-                                    ["bash", "./parse.sh", str(self.workdir), str(self.runPath)], # parse.sh prend un dossier qui contient un executable et génère le parsing des \
+                                    ["bash", constants.USER_SCRIPTS_PATH + "/parse.sh", str(self.workdir), str(self.runPath)], # parse.sh prend un dossier qui contient un executable et génère le parsing des \
                                     stdout=subprocess.DEVNULL,
                                     stderr=subprocess.PIPE,
                                     env = env                                                     # lignes dans lignes.source et la configuration de référence dans ref/result.dat
