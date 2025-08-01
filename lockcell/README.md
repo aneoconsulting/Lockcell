@@ -1,0 +1,9 @@
+Next updates incoming :
+- Optimiser les cas où on divise et qu'il y a des sets de taille 1
+- Ne pas rappeller des fake nTask dans l'analyser et être plus malin
+- Dans l'analyser j'appelle des tâches idiotes
+
+- Passer de copy à __copy__ dans les config
+- Implémenter la stocahsticité
+- Gérer un cache
+- Implémenter le passage des fichiers DD_RUN et DD_CMP

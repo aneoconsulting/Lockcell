@@ -11,4 +11,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-pymonik = { path = "../PymoniK/pymonik" }
+pymonik = { path = "../PymonikLock/pymonik" }
