@@ -51,12 +51,13 @@ class ConfigVerrou(Config):
                                     ["bash", constants.USER_SCRIPTS_PATH + "/parse.sh", str(self.workdir), str(self.runPath)], # parse.sh prend un dossier qui contient un executable et génère le parsing des \
                                     stdout=subprocess.DEVNULL,
                                     stderr=subprocess.PIPE,
-                                    env = env                                                     # lignes dans lignes.source et la configuration de référence dans ref/result.dat
+                                    env = env,                                                     # lignes dans lignes.source et la configuration de référence dans ref/result.dat
+                                    text = True
                                     )                                                           
 
         # vérification de la bonne execution
         if ref_result.returncode != 0:
-            raise RuntimeError(f"Erreur lors de l'execution du run de référence, non perturbé :\n {ref_result.stderr}")
+            raise RuntimeError(f"Erreur lors de l'execution du run de référence, non perturbé :\n {str(ref_result.stderr)}")
 
 
 
@@ -110,6 +111,7 @@ class ConfigVerrou(Config):
         pert_result = subprocess.run(
             ["./" + str(self.runPath), CURRENT + PERTURBED_DIR],
             cwd=str(self.workdir),
+            text = True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             env=env
@@ -117,7 +119,7 @@ class ConfigVerrou(Config):
 
         #TODO: Récupérer le pert_result.stderr pour le traiter et le renvoyer
         if pert_result.returncode != 0:
-            raise RuntimeError(f"Error during the exectution of DD_RUN :\n {pert_result.stderr}")
+            raise RuntimeError(f"Error during the exectution of DD_RUN :\n {str(pert_result.stderr)}")
 
         # Étape 4 — Comparaison avec DD_CMP
         cmp_result = subprocess.run([ "./" + str(self.CmpPath), CURRENT + REF_DIR, CURRENT + PERTURBED_DIR], cwd=str(self.workdir))
