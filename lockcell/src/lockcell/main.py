@@ -7,11 +7,11 @@ Email    : erwan.tchale@gmail.com
 
 PRINT_GRAPH = False
 
-import controllers
+import lockcell.controllers as controllers
 from Tasks import TaskEnv
-from graphViz import MultiViz
-import VerrouConf
-import constants
+from lockcell.graphViz import MultiViz
+import lockcell.VerrouConf as VerrouConf
+import lockcell.constants as constants
 import cloudpickle # Install cloudpickle
 cloudpickle.register_pickle_by_value(TaskEnv) # Pour les modules de ton code tu fait du sort que ca soit pickler par value
 cloudpickle.register_pickle_by_value(controllers) # Pour les modules de ton code tu fait du sort que ca soit pickler par value
