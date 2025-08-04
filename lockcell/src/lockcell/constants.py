@@ -32,7 +32,7 @@ with open(config_path, "r") as f:
 ### Exposing the constants
 
 # USER_SIDE
-USER_WORKING_DIR = _config["paths"]["working_directory"]
+USER_WORKING_DIR = str(Path(_config["paths"]["working_directory"]))
 USER_SCRIPTS_PATH = str(Path(__file__) / "/scripts")
 
 # WORKER_SIDE
