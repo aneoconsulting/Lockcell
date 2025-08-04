@@ -1,6 +1,39 @@
-# Paths
+"""
+Created on : 2025-01-08
+Author   : Erwan Tchaleu
+Email    : erwan.tchale@gmail.com
 
-USER_WORKING_DIR = "./src/lockcell"
-USER_SCRIPTS_PATH = USER_WORKING_DIR + "/scripts"
+"""
 
+import os
+import yaml
+from pathlib import Path
+
+# Load configuration file path from environment variable
+env_config_path = os.getenv("LOCKCELL_CONFIG")
+
+if not env_config_path:
+    raise EnvironmentError(
+        "Environment variable 'LOCKCELL_CONFIG' is not set.\n"
+        "Please set it to the path of your config.yaml file."
+    )
+
+config_path = Path(env_config_path)
+
+if not config_path.is_file():
+    raise FileNotFoundError(
+        f"The config file specified by LOCKCELL_CONFIG does not exist: {config_path}"
+    )
+
+# Load YAML configuration
+with open(config_path, "r") as f:
+    _config = yaml.safe_load(f)
+
+### Exposing the constants
+
+# USER_SIDE
+USER_WORKING_DIR = _config["paths"]["working_directory"]
+USER_SCRIPTS_PATH = str(Path(__file__) / "/scripts")
+
+# WORKER_SIDE
 TASK_WORKING_DIR = "."

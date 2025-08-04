@@ -1,7 +1,6 @@
 from Tasks import Config
 from pathlib import Path
 from typing import Union
-import constants
 import copy
 
 class ConfigVerrou(Config):
@@ -38,6 +37,7 @@ class ConfigVerrou(Config):
         """
         import subprocess
         import os
+        import constants
 
         # Variables d’environnement pour le run de référence
         env = os.environ.copy()
