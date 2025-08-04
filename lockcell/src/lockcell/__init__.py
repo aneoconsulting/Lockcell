@@ -1,10 +1,11 @@
 # Import key modules
 import cloudpickle
 
-from lockcell.Tasks import TaskEnv
-from lockcell.graphViz import MultiViz
 
+
+import lockcell.Tasks.TaskEnv as TaskEnv
 import lockcell.controllers as controllers
+from lockcell.graphViz import MultiViz
 import lockcell.VerrouConf as VerrouConf
 import lockcell.constants as constants
 
