@@ -8,7 +8,8 @@ Email    : erwan.tchale@gmail.com
 
 from pymonik import Pymonik, MultiResultHandle
 
-from Tasks import nTask, TaskEnv
+from lockcell.Tasks.Task import nTask
+import lockcell.Tasks.TaskEnv as TaskEnv
 from typing import List, Tuple, Optional
 import copy
 import time
@@ -146,7 +147,7 @@ def GenCloseSet(N : int, size : int, ET : float) -> List[int]:
 
 ### CODE ###########################################################################""
 
-from graphViz import MultiViz
+from lockcell.graphViz import MultiViz
 
 
 N = 2**10

@@ -9,7 +9,7 @@ from pymonik import task, MultiResultHandle
 
 import numpy as np
 from typing import List, Tuple, Optional, Union
-from . import TaskEnv
+import lockcell.Tasks.TaskEnv as TaskEnv
 
 ### NTask
 

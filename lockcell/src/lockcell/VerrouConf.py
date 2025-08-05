@@ -1,7 +1,7 @@
-from Tasks import Config
+from lockcell.Tasks.TaskEnv import Config
 from pathlib import Path
 from typing import Union
-import constants
+import lockcell.constants as constants
 import copy
 
 class ConfigVerrou(Config):
