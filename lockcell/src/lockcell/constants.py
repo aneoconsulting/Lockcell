@@ -33,7 +33,7 @@ with open(config_path, "r") as f:
 
 # USER_SIDE
 USER_WORKING_DIR = str(Path(_config["paths"]["working_directory"]))
-USER_SCRIPTS_PATH = str(Path(__file__) / "/scripts")
+USER_SCRIPTS_PATH = str(Path(__file__).parent / "scripts")
 
 # WORKER_SIDE
 TASK_WORKING_DIR = "."
