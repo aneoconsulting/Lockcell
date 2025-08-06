@@ -247,7 +247,7 @@ dev = [
 requires-dist = [
     { name = "graphviz", specifier = ">=0.21" },
     { name = "numpy", specifier = ">=2.2.6" },
-    { name = "pymonik", specifier = ">=0.2.4" },
+    { name = "pymonik", specifier = "==0.2.3" },
 ]
 
 [package.metadata.requires-dev]
@@ -436,7 +436,7 @@ wheels = [
 
 [[package]]
 name = "pymonik"
-version = "0.2.4"
+version = "0.2.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "armonik" },
@@ -444,9 +444,9 @@ dependencies = [
     { name = "grpcio" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/88/59/0feaf9852e03c1504b1a0ea3285c508ef839d3dcbd209c02b6e843ae7ec5/pymonik-0.2.4.tar.gz", hash = "sha256:374a3c30ca4a920c812c567d289373d5d1cc85a6ad71a086c1baefc8c0538836", size = 40165, upload-time = "2025-07-29T13:28:00.037Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/10/a2/0fc35134b81895124af127f8f51c4dd136edd00e3a741eaf8b886a8ee4f0/pymonik-0.2.3.tar.gz", hash = "sha256:dbed19757031d306f245b5f8ab89cba8fa9598c153cef34f81da6be10a678aea", size = 36907, upload-time = "2025-07-15T07:21:17.487Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/84/11709655a476321754fd778ad21324866c67be1e1fa11c63a6a44fc77463/pymonik-0.2.4-py3-none-any.whl", hash = "sha256:a5dba2e50c3162d4e6bc5362079f284020c9f7282b55baf4eba9ee399090d3d6", size = 19111, upload-time = "2025-07-29T13:27:59.123Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/c5/9ecd4ee90a7223d38fe8b075e3ec4e54847fecf4c1a14f8f4bbab1fdd8d3/pymonik-0.2.3-py3-none-any.whl", hash = "sha256:63e8248738a621a4f3f03a520e9a4942c635e2576d6b3191187540710b09eba3", size = 17691, upload-time = "2025-07-15T07:21:16.415Z" },
 ]
 
 [[package]]

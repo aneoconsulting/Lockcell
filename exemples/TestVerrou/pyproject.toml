@@ -5,7 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "pymonik>=0.2.4",
+    "lockcell",
+    "pymonik>=0.2.3",
 ]
 
 [dependency-groups]
@@ -14,4 +15,4 @@ dev = [
 ]
 
 [tool.uv.sources]
-lockcell = { path = "../../lockcell", editable = true }
+lockcell = { path = "../../lockcell" }

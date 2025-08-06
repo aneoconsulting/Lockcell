@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "graphviz>=0.21",
     "numpy>=2.2.6",
-    "pymonik>=0.2.4",
+    "pymonik==0.2.3",
 ]
 
 [tool.hatch.build.targets.wheel]
