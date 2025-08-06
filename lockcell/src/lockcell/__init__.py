@@ -2,7 +2,6 @@
 import cloudpickle
 
 
-
 import lockcell.Tasks.TaskEnv as TaskEnv
 import lockcell.controllers as controllers
 
@@ -19,12 +18,7 @@ cloudpickle.register_pickle_by_value(VerrouConf)
 cloudpickle.register_pickle_by_value(constants)
 
 # Exposing key classes/functions at package level
-__all__ = [
-    "MultiViz",
-    "controllers",
-    "VerrouConf",
-    "constants"
-]
+__all__ = ["MultiViz", "controllers", "VerrouConf", "constants"]
 
 # Version
 __version__ = "0.7.0"

@@ -5,7 +5,6 @@ Email    : erwan.tchale@gmail.com
 
 """
 
-
 from pymonik import Pymonik, MultiResultHandle
 
 from lockcell.Tasks.Task import nTask
@@ -17,73 +16,79 @@ import time
 
 ### GRAPH ###########################################################################
 
-class IdGen():
+
+class IdGen:
     def __init__(self) -> None:
         self.count = -1
-    
+
     def Gen(self):
         self.count += 1
         return self.count
-    
+
+
 gen = IdGen()
-    
-class Graph():
-    def __init__(self, obj = None, emphas : Optional[str] = None):
+
+
+class Graph:
+    def __init__(self, obj=None, emphas: Optional[str] = None):
         self.type = "ERR"
         self.id = gen.Gen().__str__()
-        self.son : List[Tuple[Graph, Tuple[list, bool], str]] = []
+        self.son: List[Tuple[Graph, Tuple[list, bool], str]] = []
         self.up = []
         self.emphasis = "black"
-        if emphas != None:
+        if emphas is not None:
             self.emphasis = emphas
-        if obj != None:
+        if obj is not None:
             self.up = obj
-        self.out : Tuple[Graph, Tuple[list, bool]] = (self, None) # type: ignore
+        self.out: Tuple[Graph, Tuple[list, bool]] = (self, None)  # type: ignore
 
-    def setType(self, type :str):
+    def setType(self, type: str):
         self.type = type
-    def addLabel(self, label :str):
+
+    def addLabel(self, label: str):
         self.type += "\n" + label
 
     def sup(self, obj, data):
         self.up.append((obj, data))
-    
-    def down(self, obj, data, label = ""):
+
+    def down(self, obj, data, label=""):
         self.son.append((obj, data, label))
-    
+
     def sout(self, obj, data):
         self.out = (obj, data)
-    
-    def setEmphasis(self, color : str):
+
+    def setEmphasis(self, color: str):
         self.emphasis = color
-    
+
     def __repr__(self) -> str:
         return f"Graph : {self.id}"
-    
 
 
-
-    
 ### TEST CONFIG #####################################################################
 
+
 class TestConfig(TaskEnv.Config):
-    def __init__(self, *args, nbRun = None):
+    def __init__(self, *args, nbRun=None):
         self.Pb = []
         super().__init__(nbRun)
         if args:
             self.Pb = copy.deepcopy(args[0])
         super().__init__()
-    
-    def GenProb(self, N :int, *args): # TODO: faire en sorte que les ensembles ne se surperposent pas
+
+    def GenProb(
+        self, N: int, *args
+    ):  # TODO: faire en sorte que les ensembles ne se surperposent pas
         self.Pb = []
         space = [i for i in range(N)]
         curN = N
         if args:
-            for (cle, nbr, et, p) in args:
+            for cle, nbr, et, p in args:
                 try:
                     cle_int = int(cle)
-                    if cle_int <=0:
-                        raise ValueError("Génération du problem set impossible, la taille de l'ensemble passée est négative")
+                    if cle_int <= 0:
+                        raise ValueError(
+                            "Génération du problem set impossible, la taille de l'ensemble passée est négative"
+                        )
                     for _ in range(cle):
                         idxs = GenCloseSet(curN, nbr, et)
                         elt = []
@@ -95,45 +100,50 @@ class TestConfig(TaskEnv.Config):
                         curN -= nbr
 
                 except ValueError as e:
-                    raise ValueError("Erreur lors de la génération du problem set : conversion en entier | " + str(e))
+                    raise ValueError(
+                        "Erreur lors de la génération du problem set : conversion en entier | "
+                        + str(e)
+                    )
         else:
-            raise ValueError("Erreur lors de la génération du problem set : veuillez donner une taille d'ensemble minimaux au format \"taille de l'ensemble\" : nombre")
-        
-    
-    
+            raise ValueError(
+                "Erreur lors de la génération du problem set : veuillez donner une taille d'ensemble minimaux au format \"taille de l'ensemble\" : nombre"
+            )
+
     def Test(self, subspace):
         for test in self.Pb:
             if TestConfig.In(subspace, test[0]):
-                    return False
+                return False
         return True
-    
+
     @staticmethod
-    def In(tab : list, test : list):
+    def In(tab: list, test: list):
         res = True
         for i in test:
-            if not (i in tab):
+            if i not in tab:
                 res = False
                 break
         return res
-    
+
     def copy(self):
         newCopy = TestConfig(self.Pb, self.nbRun)
         return newCopy
 
-def GenCloseSet(N : int, size : int, ET : float) -> List[int]:
+
+def GenCloseSet(N: int, size: int, ET: float) -> List[int]:
     if size > N:
         raise RuntimeError(f"Cannot generate a {size} sized set in a {N} sized space")
     import numpy as np
+
     center = np.random.randint(0, N)
     val = [center]
     for _ in range(1, size):
-        step = round(np.random.normal(loc = 0, scale = ET))
+        step = round(np.random.normal(loc=0, scale=ET))
         center += step
-        center = max(0, min(center, N-1))
+        center = max(0, min(center, N - 1))
         i = 1
         while center in val:
-            up = max(0, min(center + i, N -1))
-            down = min(max(center - i, 0), N-1)
+            up = max(0, min(center + i, N - 1))
+            down = min(max(center - i, 0), N - 1)
             if up not in val:
                 center = up
             elif down not in val:
@@ -141,52 +151,55 @@ def GenCloseSet(N : int, size : int, ET : float) -> List[int]:
             i += 1
         val.append(center)
     return val
-            
-
 
 
 ### CODE ###########################################################################""
 
-from lockcell.graphViz import MultiViz
+from lockcell.graphViz import MultiViz  # noqa: E402
 
 
 N = 2**10
 searchspace = [i for i in range(N)]
 
-def dd_min(searchspace :list, config : TaskEnv.Config, graph : Optional[Graph] = None):
-    return nTask.invoke(searchspace, 2, config, graph) # type: ignore
 
-def RDDMIN(searchspace : list, func, finalfunc, config : TaskEnv.Config, viz : MultiViz = MultiViz()):
-    with Pymonik(endpoint="172.29.94.180:5001", environment={"pip":["numpy"]}):
+def dd_min(searchspace: list, config: TaskEnv.Config, graph: Optional[Graph] = None):
+    return nTask.invoke(searchspace, 2, config, graph)  # type: ignore
+
+
+def RDDMIN(searchspace: list, func, finalfunc, config: TaskEnv.Config, viz: MultiViz = MultiViz()):
+    with Pymonik(endpoint="172.29.94.180:5001", environment={"pip": ["numpy"]}):
         start = time.time()
-        result = dd_min(searchspace, config, viz.newGraph()).wait().get() 
+        result = dd_min(searchspace, config, viz.newGraph()).wait().get()
         i = 1
         tot = []
-        while result[1] == False:
+        while not result[1]:
             # On retire les doublons
             dic = {}
             res = []
             for key in result[0]:
-                if not (key.__str__() in dic):
+                if key.__str__() not in dic:
                     res.append(key)
                     dic[key.__str__()] = True
             # On transmet
-            if func != None:
+            if func is not None:
                 func(res, i)
-            
-            #Ajout au total + réduction du searchspace, puis on relance un dd_min
+
+            # Ajout au total + réduction du searchspace, puis on relance un dd_min
             tot.extend(res)
             all = sum(result[0], [])
             searchspace = TaskEnv.listminus(searchspace, all)
             result = dd_min(searchspace, config, viz.newGraph()).wait().get()
             i += 1
-        if finalfunc != None:
+        if finalfunc is not None:
             finalfunc(tot, i)
         stop = time.time()
         return tot, i, (stop - start)
 
-def SRDDMIN(searchspace : list, nbRunTab : list, found, config : TaskEnv.Config, viz : MultiViz = MultiViz()):
-    #TODO: Preprocessing of nbRunTab
+
+def SRDDMIN(
+    searchspace: list, nbRunTab: list, found, config: TaskEnv.Config, viz: MultiViz = MultiViz()
+):
+    # TODO: Preprocessing of nbRunTab
 
     findback = {}
     i = 0
@@ -194,21 +207,21 @@ def SRDDMIN(searchspace : list, nbRunTab : list, found, config : TaskEnv.Config,
     for run in nbRunTab:
         findback[run] = i
         i += 1
-    with Pymonik(endpoint="172.29.94.180:5001", environment={"pip":["numpy"]}):
+    with Pymonik(endpoint="172.29.94.180:5001", environment={"pip": ["numpy"]}):
         firstFail = False
         for run in nbRunTab:
             config.setNbRun(run)
             result = dd_min(searchspace, config, viz.newGraph()).wait().get()
-            if result[1] == True:
+            if result[1]:
                 continue
-            while result[1] == False:
+            while not result[1]:
                 firstFail = True
                 config.setNbRun(run)
                 done = False
                 Args = [(res, 2, config) for res in result[0]]
-                storeResult = nTask.map_invoke(Args).wait().get() 
+                storeResult = nTask.map_invoke(Args).wait().get()
 
-                #TODO: Quand l'implem de la disponibilité au plus tot sera prête faudra adapter
+                # TODO: Quand l'implem de la disponibilité au plus tot sera prête faudra adapter
                 while not done:
                     ready = [i for i in range(len(storeResult))]
                     notReady = TaskEnv.listminus([i for i in range(len(storeResult))], ready)
@@ -216,22 +229,26 @@ def SRDDMIN(searchspace : list, nbRunTab : list, found, config : TaskEnv.Config,
                     waiting = MultiResultHandle([storeResult[idx] for idx in notReady])
                     didit = [storeResult[idx] for idx in ready]
 
-                    #préparation des configuration pour les tâches suivantes,
+                    # préparation des configuration pour les tâches suivantes,
                     for res in didit:
                         where = findback[res[2].nbRun]
-                        if where + 1 >= len(nbRunTab): #Si on a déjà atteint le nombre de run max, on ajoute la sortie à tot et on réduit le search space
+                        if (
+                            where + 1 >= len(nbRunTab)
+                        ):  # Si on a déjà atteint le nombre de run max, on ajoute la sortie à tot et on réduit le search space
                             tot.extend(res[0])
                             all = sum(res[0], [])
                             found(res[0])
                             searchspace = TaskEnv.listminus(searchspace, all)
                             continue
 
-                        nextrun = nbRunTab[where+1] # Sinon on trouve le nombre de run suivant et on prépare le lancement des tâches filles
+                        nextrun = nbRunTab[
+                            where + 1
+                        ]  # Sinon on trouve le nombre de run suivant et on prépare le lancement des tâches filles
                         onesized = []
                         for sub in res[0]:
                             if len(sub) == 1:
                                 onesized.append(sub)
-                                continue 
+                                continue
                             newconf = config.copy()
                             newconf.setNbRun(nextrun)
                             nextArgs.append((sub, 2, newconf))
@@ -252,8 +269,8 @@ def SRDDMIN(searchspace : list, nbRunTab : list, found, config : TaskEnv.Config,
                             continue
                     storeResult = storeResult.wait().get()
                 result = dd_min(searchspace, config, viz.newGraph()).wait().get()
-        if firstFail:    
+        if firstFail:
             return tot
-        raise RuntimeError(f"SRDDMin : testing the subset {nbRunTab[-1]} times has never returned false")
-
-
+        raise RuntimeError(
+            f"SRDDMin : testing the subset {nbRunTab[-1]} times has never returned false"
+        )
