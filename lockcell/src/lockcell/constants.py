@@ -26,9 +26,11 @@ if not config_path.is_file():
     )
 
 # Load YAML configuration
-with open(config_path, "r") as f:
-    _config = yaml.safe_load(f)
+def load_config(path):
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
 
+_config = load_config(config_path)
 ### Exposing the constants
 
 # USER_SIDE
