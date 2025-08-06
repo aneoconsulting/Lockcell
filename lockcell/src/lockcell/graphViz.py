@@ -8,7 +8,7 @@ Email    : erwan.tchale@gmail.com
 ### AFFICHAGE DU GRAPHE DES TÂCHES
 
 from graphviz import Digraph
-from lockcell.controllers import Graph
+from .graph import Graph
 from typing import List, Optional
 
 

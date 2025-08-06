@@ -8,7 +8,9 @@ Email    : erwan.tchale@gmail.com
 from pymonik import task, MultiResultHandle
 
 from typing import List, Tuple, Optional, Union
-import lockcell.Tasks.TaskEnv as TaskEnv
+from ..config.BaseConfig import BaseConfig
+from .utils import listminus, split
+
 
 ### NTask
 
@@ -17,7 +19,7 @@ import lockcell.Tasks.TaskEnv as TaskEnv
 def nTask(
     delta: list,
     n: Union[int, List[list]],
-    config: TaskEnv.Config,
+    config: BaseConfig,
     me,
     Recurse=True,
     Result: Optional[bool] = None,
@@ -26,7 +28,7 @@ def nTask(
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from controllers import Graph
+        from ..graph import Graph
 
         me.setType(f"{n}Task")
 
@@ -49,8 +51,7 @@ def nTask(
             me.sout(me, ["Input", False])
         return "Input", False
 
-    # Si le test fail
-
+    # Si le test fail :
     # Si |Delta| = 1 on a fini
     if len(delta) == 1:
         ### PrintGraph ###
@@ -60,7 +61,7 @@ def nTask(
 
     # Sinon on split en n (= granularity)
     if isinstance(n, int):
-        subdiv = TaskEnv.split(delta, n)
+        subdiv = split(delta, n)
     else:
         subdiv = n
     subdivArg = [
@@ -103,14 +104,14 @@ def nAGG(
     subdiv: List[list],
     answers: List[Tuple[List[list] | None, bool]],
     n: int,
-    config: TaskEnv.Config,
+    config: BaseConfig,
     me,
     oneSub: List[int] = [],
 ):
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from controllers import Graph
+        from ..graph import Graph
 
         me.setType(f"{n}AGG")
 
@@ -157,7 +158,7 @@ def nAGG(
         k = min(2 * n, len(omega))
         for delta in subdiv:  # Mise en forme des lis
             if len(delta) >= 2:
-                temp = TaskEnv.split(delta, 2)
+                temp = split(delta, 2)
                 newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
                 newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
                 newdivision.append(temp[0])
@@ -194,7 +195,7 @@ def nAGG(
     omega = sum(subdiv, [])
     k = max(2, n - 1)
     nablas = [
-        (TaskEnv.listminus(omega, delta), k, config, Graph() if gPrint else None, recursion)
+        (listminus(omega, delta), k, config, Graph() if gPrint else None, recursion)
         for delta in subdiv
     ]
     result = nTask.map_invoke(nablas)  # type: ignore
@@ -226,14 +227,14 @@ def nAGG2(
     subdiv: List[list],
     answers: List[Tuple[List[list] | None, bool]],
     n: int,
-    config: TaskEnv.Config,
+    config: BaseConfig,
     me,
     oneSub: List[int] = [],
 ):
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from controllers import Graph
+        from ..graph import Graph
 
         me.setType(f"{n}AGG2")
 
@@ -279,7 +280,7 @@ def nAGG2(
     k = min(2 * n, len(omega))
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
-            temp = TaskEnv.split(delta, 2)
+            temp = split(delta, 2)
             newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
             newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
             newdivision.append(temp[0])
@@ -311,14 +312,14 @@ def nAnalyser(
     subdiv: List[list],
     answers: List[Tuple[List[list] | None, bool]],
     n: int,
-    config: TaskEnv.Config,
+    config: BaseConfig,
     me,
     oneSub: List[int] = [],
 ):
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from controllers import Graph
+        from ..graph import Graph
 
         me.setType(f"{n}Analyser - Down")
 
@@ -337,7 +338,7 @@ def nAnalyser(
         # Est-on au niveau de découpage le plus fin
         granularityMax = len(omega) == n
         if granularityMax and (len(idxs) == 1):  # TODO: cf. preuve
-            rep = [TaskEnv.listminus(omega, subdiv[idxs[0]])]
+            rep = [listminus(omega, subdiv[idxs[0]])]
             ### PrintGraph ###
             if gPrint:
                 me.addLabel("One fail")
@@ -348,7 +349,7 @@ def nAnalyser(
         if len(idxs) == 1:  # Si un seul fail on recurse dessus
             # On prépare les arguments
             idx = idxs[0]
-            nabla = TaskEnv.listminus(omega, subdiv[idx])
+            nabla = listminus(omega, subdiv[idx])
 
             GrOut = None
             ### PrintGraph ###
@@ -369,7 +370,7 @@ def nAnalyser(
                     oneSub.append(idx_)
                     idx_ += 1
                 else:
-                    temp = TaskEnv.split(div, 2)
+                    temp = split(div, 2)
                     newdivision.append(temp[0])
                     newdivision.append(temp[1])
                     idx_ += 2
@@ -397,8 +398,8 @@ def nAnalyser(
                     if not vals[idx]:
                         for j in range(idx + 1, n):
                             if not vals[j]:
-                                intersection = TaskEnv.listminus(omega, subdiv[idx])
-                                intersection = TaskEnv.listminus(intersection, subdiv[j])
+                                intersection = listminus(omega, subdiv[idx])
+                                intersection = listminus(intersection, subdiv[j])
                                 Args.append(
                                     (intersection, 2, config, Graph() if gPrint else None, False)
                                 )
@@ -407,8 +408,8 @@ def nAnalyser(
                 if not vals[idx]:
                     for j in range(idx + 2, n):
                         if not vals[j]:
-                            intersection = TaskEnv.listminus(omega, subdiv[idx])
-                            intersection = TaskEnv.listminus(intersection, subdiv[j])
+                            intersection = listminus(omega, subdiv[idx])
+                            intersection = listminus(intersection, subdiv[j])
                             Args.append(
                                 (intersection, 2, config, Graph() if gPrint else None, False)
                             )
@@ -416,8 +417,8 @@ def nAnalyser(
                 if not vals[idx]:
                     for j in range(idx + 1, n):
                         if not vals[j]:
-                            intersection = TaskEnv.listminus(omega, subdiv[idx])
-                            intersection = TaskEnv.listminus(intersection, subdiv[j])
+                            intersection = listminus(omega, subdiv[idx])
+                            intersection = listminus(intersection, subdiv[j])
                             Args.append(
                                 (intersection, 2, config, Graph() if gPrint else None, False)
                             )
@@ -467,7 +468,7 @@ def nAnalyser(
                 k = min(n - 1, len(omega) - len(subdiv[idx]))
                 Args.append(
                     (
-                        TaskEnv.listminus(omega, subdiv[idx]),
+                        listminus(omega, subdiv[idx]),
                         k,
                         config,
                         Graph(emphas="orange") if gPrint else None,
@@ -510,7 +511,7 @@ def nAnalyser(
     idx = 0
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
-            temp = TaskEnv.split(delta, 2)
+            temp = split(delta, 2)
             newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
             newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
             newdivision.append(temp[0])
@@ -546,13 +547,13 @@ def nAnalyserDown(
     answers: List[Tuple[List[list] | None, bool]],
     conj: List[Optional[int]],
     n: int,
-    config: TaskEnv.Config,
+    config: BaseConfig,
     me,
 ):
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from controllers import Graph
+        from ..graph import Graph
 
         me.setType(f"{n}Analyser - Down")
 
@@ -666,7 +667,7 @@ def nAnalyserDown(
         # Launching calculus on the full intersection
         newDelta = omega
         for idx in lst:
-            newDelta = TaskEnv.listminus(newDelta, subdiv[idx])
+            newDelta = listminus(newDelta, subdiv[idx])
 
         Gr1 = Graph() if gPrint else None
         newdivision = []
@@ -680,7 +681,7 @@ def nAnalyserDown(
                 oneSub.append(idx_)
                 idx_ += 1
             else:
-                temp = TaskEnv.split(subdiv[idx], 2)
+                temp = split(subdiv[idx], 2)
                 newdivision.append(temp[0])
                 newdivision.append(temp[1])
                 idx_ += 2
@@ -719,12 +720,12 @@ def nAnalyserDown(
 
         NewNabla1 = omega
         for idx in tab1:
-            NewNabla1 = TaskEnv.listminus(NewNabla1, subdiv[idx])
+            NewNabla1 = listminus(NewNabla1, subdiv[idx])
         Gr1 = Graph() if gPrint else None
 
         NewNabla2 = omega
         for idx in tab2:
-            NewNabla2 = TaskEnv.listminus(NewNabla2, subdiv[idx])
+            NewNabla2 = listminus(NewNabla2, subdiv[idx])
         Gr2 = Graph() if gPrint else None
 
         newdivision1 = []
@@ -738,7 +739,7 @@ def nAnalyserDown(
                 oneSub1.append(idx_1)
                 idx_1 += 1
             else:
-                temp = TaskEnv.split(subdiv[idx], 2)
+                temp = split(subdiv[idx], 2)
                 newdivision1.append(temp[0])
                 newdivision1.append(temp[1])
                 idx_1 += 2
@@ -753,7 +754,7 @@ def nAnalyserDown(
                 oneSub2.append(idx_2)
                 idx_2 += 1
             else:
-                temp = TaskEnv.split(subdiv[idx], 2)
+                temp = split(subdiv[idx], 2)
                 newdivision2.append(temp[0])
                 newdivision2.append(temp[1])
                 idx_2 += 2
@@ -790,7 +791,7 @@ def nAnalyserDown(
         results = []
         fakesons = []
         for idx in range(n):  # Correspond à une n-1 Task
-            nabla = TaskEnv.listminus(omega, subdiv[idx])
+            nabla = listminus(omega, subdiv[idx])
             if idx not in lst:  # Si c'est un tache qui ne fail pas, on la génère simplement
                 results.append(
                     nTask.invoke(nabla, n - 1, config, Graph(emphas="orange"), False, True)
@@ -803,7 +804,7 @@ def nAnalyserDown(
             for i in range(n):
                 if i == idx:
                     continue
-                nablaPrime = TaskEnv.listminus(nabla, subdiv[i])
+                nablaPrime = listminus(nabla, subdiv[i])
                 newSubdiv.append(subdiv[i])
                 rep = matrix[idx][i]
                 ### PrintGraph ###
@@ -876,7 +877,7 @@ def Corrector(
     answers: List[Tuple[List[list] | None, bool]],
     matrix: List[List[bool]],
     n: int,
-    config: TaskEnv.Config,
+    config: BaseConfig,
     me,
 ):
     ### PrintGraph ###

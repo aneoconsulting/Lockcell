@@ -1,10 +1,10 @@
-from lockcell.Tasks.TaskEnv import Config
+from .config.BaseConfig import BaseConfig
 from pathlib import Path
 from typing import Union
-import lockcell.constants as constants
+from .constants import USER_SCRIPTS_PATH
 
 
-class ConfigVerrou(Config):
+class ConfigVerrou(BaseConfig):
     def __init__(
         self,
         workingdir: Union[Path, str],
@@ -53,7 +53,7 @@ class ConfigVerrou(Config):
         ref_result = subprocess.run(
             [
                 "bash",
-                constants.USER_SCRIPTS_PATH + "/parse.sh",
+                USER_SCRIPTS_PATH + "/parse.sh",
                 str(self.workdir),
                 str(self.runPath),
             ],  # parse.sh prend un dossier qui contient un executable et génère le parsing des \
