@@ -1,0 +1,4 @@
+#!/bin/bash
+DIR=$1
+
+valgrind --tool=verrou --rounding-mode=average ./unitTest > ${DIR}/result.dat
