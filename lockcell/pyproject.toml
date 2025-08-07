@@ -21,3 +21,8 @@ where = ["src/lockcell"]
 members = [
     "lockcell",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.7",
+]

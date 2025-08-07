@@ -2,11 +2,15 @@ from lockcell.Tasks.TaskEnv import Config
 from pathlib import Path
 from typing import Union
 import lockcell.constants as constants
-import copy
+
 
 class ConfigVerrou(Config):
-    def __init__(self, workingdir : Union[Path, str], RelrunPath : Union[Path, str], RelCmpPath : Union[Path, str]):
-
+    def __init__(
+        self,
+        workingdir: Union[Path, str],
+        RelrunPath: Union[Path, str],
+        RelCmpPath: Union[Path, str],
+    ):
         if isinstance(workingdir, str):
             workingdir = Path(workingdir)
         if isinstance(RelrunPath, str):
@@ -27,7 +31,6 @@ class ConfigVerrou(Config):
         self.runPath = RelrunPath
         self.CmpPath = RelCmpPath
 
-    
     def parseGenRunFile(self):
         """
         Fais le run de référence, le stocke dans workingdir/ref, en même temps génère le fichier lignes.source dans le working directory.
@@ -48,18 +51,23 @@ class ConfigVerrou(Config):
 
         # Lancement de l’exécutable
         ref_result = subprocess.run(
-                                    ["bash", constants.USER_SCRIPTS_PATH + "/parse.sh", str(self.workdir), str(self.runPath)], # parse.sh prend un dossier qui contient un executable et génère le parsing des \
-                                    stdout=subprocess.DEVNULL,
-                                    stderr=subprocess.PIPE,
-                                    env = env,                                                     # lignes dans lignes.source et la configuration de référence dans ref/result.dat
-                                    text = True
-                                    )                                                           
+            [
+                "bash",
+                constants.USER_SCRIPTS_PATH + "/parse.sh",
+                str(self.workdir),
+                str(self.runPath),
+            ],  # parse.sh prend un dossier qui contient un executable et génère le parsing des \
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            env=env,  # lignes dans lignes.source et la configuration de référence dans ref/result.dat
+            text=True,
+        )
 
         # vérification de la bonne execution
         if ref_result.returncode != 0:
-            raise RuntimeError(f"Erreur lors de l'execution du run de référence, non perturbé :\n {str(ref_result.stderr)}")
-
-
+            raise RuntimeError(
+                f"Erreur lors de l'execution du run de référence, non perturbé :\n {str(ref_result.stderr)}"
+            )
 
     def generateSearchSpace(self) -> list:
         """
@@ -72,14 +80,15 @@ class ConfigVerrou(Config):
         """
         In = self.workdir / "lines.source"
         try:
-            with open(In, 'r') as file:
+            with open(In, "r") as file:
                 all_lines = file.readlines()
         except FileNotFoundError:
-            raise FileNotFoundError("Cannot genrate a searchspace without the lines.source file, please call the parseGenRunFil method before generating searchspace")
+            raise FileNotFoundError(
+                "Cannot genrate a searchspace without the lines.source file, please call the parseGenRunFil method before generating searchspace"
+            )
 
         return all_lines
-    
-    
+
     def copy(self) -> "ConfigVerrou":
         return ConfigVerrou(self.workdir, self.runPath, self.CmpPath)
 
@@ -87,16 +96,18 @@ class ConfigVerrou(Config):
         import os
         import subprocess
 
-        #Préparation du fichier des lignes à perturber pour verrou
+        # Préparation du fichier des lignes à perturber pour verrou
         fout = self.workdir / "lines.pert"
-        with open(fout, 'w') as f:
+        with open(fout, "w") as f:
             f.writelines(subspace)
 
         # Dossier pour stocker les résultats, du point de vue de l'intérieur de workingdir car DD_RUN et DD_CMP tournent dedans
         REF_DIR = str("ref")
         PERTURBED_DIR = str("pert")
-        LIGNE_FICHIER = str("lines.pert") 
-        CURRENT = str("./") # Quand on run des commandes dans un contexte cd workdir, on utilise le current
+        LIGNE_FICHIER = str("lines.pert")
+        CURRENT = str(
+            "./"
+        )  # Quand on run des commandes dans un contexte cd workdir, on utilise le current
 
         # Définition des variables d’environnement pour le run perturbé
         env = os.environ.copy()
@@ -111,19 +122,23 @@ class ConfigVerrou(Config):
         pert_result = subprocess.run(
             ["./" + str(self.runPath), CURRENT + PERTURBED_DIR],
             cwd=str(self.workdir),
-            text = True,
+            text=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
-            env=env
+            env=env,
         )
 
-        #TODO: Récupérer le pert_result.stderr pour le traiter et le renvoyer
+        # TODO: Récupérer le pert_result.stderr pour le traiter et le renvoyer
         if pert_result.returncode != 0:
-            raise RuntimeError(f"Error during the exectution of DD_RUN :\n {str(pert_result.stderr)}")
+            raise RuntimeError(
+                f"Error during the exectution of DD_RUN :\n {str(pert_result.stderr)}"
+            )
 
         # Étape 4 — Comparaison avec DD_CMP
-        cmp_result = subprocess.run([ "./" + str(self.CmpPath), CURRENT + REF_DIR, CURRENT + PERTURBED_DIR], cwd=str(self.workdir))
-
+        cmp_result = subprocess.run(
+            ["./" + str(self.CmpPath), CURRENT + REF_DIR, CURRENT + PERTURBED_DIR],
+            cwd=str(self.workdir),
+        )
 
         # Code de retour global
         return cmp_result.returncode == 0

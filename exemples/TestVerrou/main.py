@@ -1,12 +1,13 @@
-PRINT_GRAPH = False
 import os
-import sys
 from pathlib import Path
-os.environ["LOCKCELL_CONFIG"] = str(Path(__file__).parent/ "config.yaml")
+
+os.environ["LOCKCELL_CONFIG"] = str(Path(__file__).parent / "config.yaml")
 
 
 from lockcell import MultiViz, VerrouConf, constants, controllers
 import tools
+
+PRINT_GRAPH = False
 
 # For potential print
 Viz = MultiViz(active=PRINT_GRAPH)
@@ -22,7 +23,6 @@ config.parseGenRunFile()
 searchspace = config.generateSearchSpace()
 print("[INFO] Parsing done, searchspace generated")
 
-from pathlib import Path
 config.workdir = Path(constants.TASK_WORKING_DIR + "/verrou")
 
 # Launching RDDMin

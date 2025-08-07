@@ -25,10 +25,12 @@ if not config_path.is_file():
         f"The config file specified by LOCKCELL_CONFIG does not exist: {config_path}"
     )
 
+
 # Load YAML configuration
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
+
 
 _config = load_config(config_path)
 ### Exposing the constants
