@@ -23,6 +23,36 @@ def nTask(
     Result: Optional[bool] = None,
     oneSub: List[int] = [],
 ):
+    """
+    The only task that execute a test. If the test passes, it returns the result. If it fails,
+    the task may resubmit additional sub-tests depending on the configuration.
+
+    Args:
+        delta (list): List of elements to perturb during the test.
+        n (Union[int, List[list]]): Subdivision strategy — either an integer (split delta into `n` parts),
+            or an explicit partition provided as a list of lists.
+        config (BaseConfig.BaseConfig): Configuration object used to execute the test.
+        me (Graph): Graph used for dependency tracking or visualization.
+        Recurse (bool, optional): If False, the task returns the result directly without further subdivision.
+            Defaults to True.
+        Result (Optional[bool], optional): If known, the expected result. Used when only resubmitting a test.
+            Defaults to None.
+        oneSub (List[int], optional): When `n` is a list of lists, this indicates which subsets
+            cannot be split further (typically because they are of size one). This is used to
+            preserve the binary tree structure. Not used by this task, but forwarded for consistency.
+            Defaults to an empty list.
+
+
+    Returns:
+    Tuple[Union[List[list], str], bool]: A pair where:
+        - the first element is either a list containing the 1 minimal failing subset of `delta`,
+          or the string `"Input"` if `Recurse` is False (used as a marker to indicate delegation);
+        - the second element is a boolean indicating whether `delta` is a failing subset.
+
+    This task may delegate to a nAGG task, which returns a result in the same format.
+
+    """
+
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
@@ -107,6 +137,33 @@ def nAGG(
     me,
     oneSub: List[int] = [],
 ):
+    """
+    nAGG is a task that analyzes the results of multiple `nTask` executions. If some tasks failed,
+    it aggregates their results. Otherwise, it proceeds to test the complement of the tested subsets.
+
+    Args:
+        subdiv (List[list]): The current subdivision of `delta`, representing the subsets tested by each `nTask`.
+        answers (List[Tuple[Optional[List[list]], bool]]): Results from each `nTask`. Each tuple contains either:
+            - a 1 minimal failing subset list (or None), and
+            - a boolean indicating whether the tested subset failed.
+        n (int): The number of subsets in `subdiv`.
+        config (BaseConfig.BaseConfig): Configuration object passed to downstream tasks. Also specifies
+            post-processing behavior through `config.mode`, which can be `"default"` or `"analyse"`.
+        me (Graph): Graph used for dependency tracking or visualization.
+        oneSub (List[int], optional): This indicates which element of subdiv
+            cannot be split further (typically because they are of size one). This is used to
+            preserve the binary tree structure. Can be updated in this task #TODO, forwarded for consistency.
+            Defaults to an empty list.
+
+    Returns:
+        Tuple[List[list], bool]: A pair where:
+            - the first element is a list containing the 1 minimal failing subsets of delta.
+            - the second element is a boolean indicating whether the combined subset (delta = the union of subsets) is failing.
+
+        This task may delegate to a `nAGG2` or a `nAnalyser`, or return directly, following the same format.
+
+    """
+
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
@@ -143,7 +200,7 @@ def nAGG(
 
     if (
         n == 2
-    ):  # Si la granularité vaut 2, on ne test pas les complémentaires et on augmente directement la granularité
+    ):  # Optimisation : Si la granularité vaut 2, on ne test pas les complémentaires et on augmente directement la granularité
         omega = sum(subdiv, [])
         if len(omega) <= n:
             ### PrintGraph ###
@@ -154,6 +211,7 @@ def nAGG(
         newdivision = []  # Pour le 2nAGG
         newdivisionArg = []  # Pour les nTask
 
+        # TODO: Add the updating of oneSub, it doesn't happen often (granularity = 2) but for 3 sized delta it is important
         k = min(2 * n, len(omega))
         for delta in subdiv:  # Mise en forme des lis
             if len(delta) >= 2:
@@ -230,6 +288,33 @@ def nAGG2(
     me,
     oneSub: List[int] = [],
 ):
+    """
+    `nAGG2` is a task triggered after a `nAGG` submits `nTask`s on the complementary subsets of `delta`.
+    It analyzes the results of these `nTask` executions. If any tasks fail, it aggregates the results.
+    Otherwise, it increases the granularity by splitting each subset in `subdiv` into two and resubmitting
+    `nTask`s on those finer subsets. The resulting outputs are later gathered by a `nAGG`, which may in turn
+    re-launch the complementary testing process if necessary.
+
+    Args:
+        subdiv (List[list]): The current subdivision of `delta`.
+        answers (List[Tuple[Optional[List[list]], bool]]): Results returned from each `nTask`, where each task
+            was executed on the **complementary** of a subset in `subdiv`. Each tuple contains:
+            - either a 1 minimal failing subset list (or `None`), and
+            - a boolean indicating whether the tested complementary subset failed.
+        n (int): The number of subsets in `subdiv`.
+        config (BaseConfig.BaseConfig): Configuration object forwarded to downstream tasks.
+            The presence of a `nAGG2` implies that the program is running in `"default"` mode.
+        me (Graph): Graph used for coordination or visualization, same as in other tasks.
+        oneSub (List[int], optional): Not used in `"default"` mode, but required for signature consistency.
+            This allows `nAGG` to treat `nAnalyser` and `nAGG2` interchangeably. Defaults to an empty list.
+
+    Returns:
+        Tuple[List[list], bool]: A pair where:
+            - the first element is either a list containing the 1 minimal failing subsets of delta.
+            - the second element is a boolean indicating whether the combined subset is failing.
+
+        This task may delegate to a `nAGG`, or return directly, following the same result structure.
+    """
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
@@ -315,6 +400,36 @@ def nAnalyser(
     me,
     oneSub: List[int] = [],
 ):
+    """
+    `nAnalyser` is a task triggered after a `nAGG` submits `nTask`s on the complementary subsets of `delta`.
+    It analyzes the results of these tasks. If any fail, it proceeds with further analysis (see algorithm
+    documentation), prioritizing easy cases. In complex cases it submits computations for relevant complementary intersections and delegates to a `nAnalyserDown`.
+
+    Otherwise, it increases the granularity by splitting each subset in `subdiv` into two and resubmitting
+    `nTask`s on the finer subsets. The outputs are later gathered by a `nAGG`, which may re-launch the
+    complementary testing process if necessary.
+
+    Args:
+        subdiv (List[list]): The current subdivision of `delta`.
+        answers (List[Tuple[Optional[List[list]], bool]]): Results returned from each `nTask`, each executed
+            on the **complement** of a subset in `subdiv`. Each tuple contains:
+            - "Input" or None, since they were running in not recursing mode
+            - a boolean indicating whether the tested set failed.
+        n (int): The number of subsets in `subdiv`.
+        config (BaseConfig.BaseConfig): Configuration object forwarded to downstream tasks.
+            The presence of a `nAnalyser` implies the program is running in `"Analyse"` mode.
+        me (Graph): Graph used for coordination or visualization, as in other tasks.
+        oneSub (List[int], optional): Used to identify conjugate subsets.
+            Defaults to an empty list.
+
+    Returns:
+        Tuple[List[list], bool]: A pair where:
+            - the first element is a list of 1 minimal failing subsets of `delta`;
+            - the second element is a boolean indicating whether the combined subset is failing.
+
+        This task may delegate to a `nAGG` or a `nAnalyserDown`, or return directly, using the same result structure.
+    """
+
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
@@ -549,6 +664,38 @@ def nAnalyserDown(
     config: TaskEnv.Config,
     me,
 ):
+    """
+    `nAnalyserDown` is a task triggered by a `nAnalyser`, after it submits `nTask`s on the relevant
+    intersections of the complementary subsets of `delta`.
+
+    It analyzes the results of these tasks. As described in the algorithm documentation, it attempts to
+    identify separable failing subsets. If such cases are found, it proceeds accordingly.
+    Otherwise, it reconstructs a classical execution path and simulates a standard delta debugging process
+    for the remaining steps.
+
+    Args:
+        subdiv (List[list]): The current subdivision of `delta`.
+        answers (List[Tuple[Optional[str], bool]]): Results returned from each `nTask`, which ran in
+            non-recursive mode. Each tuple contains:
+            - `"Input"` or `None`, and
+            - a boolean indicating whether the tested set failed.
+        conj (List[Optional[int]]): Built from the `oneSub` list used in other tasks.
+            `conj[i]` is the index of the subset conjugate to the i-th one.
+            It is equal to its own index if the subset was size one and not splittable,
+            or `None` if the i-th subset did not fail.
+
+        n (int): The number of subsets in `subdiv`.
+        config (BaseConfig.BaseConfig): Configuration object forwarded to downstream tasks.
+        me (Graph): Graph used for coordination or visualization, as in other tasks.
+
+    Returns:
+        Tuple[List[list], bool]: A pair where:
+            - the first element is a list of 1 minimal failing subsets of `delta`;
+            - the second element is a boolean indicating whether the combined subset is failing.
+
+        This task may delegate to a `Corrector` or a `nAGG`, or return directly, using the same result structure.
+    """
+
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
@@ -879,6 +1026,34 @@ def Corrector(
     config: TaskEnv.Config,
     me,
 ):
+    """
+    `Corrector` is a unique task that verifies whether the guess made by `nAnalyser` was correct.
+    See the algorithm documentation for more details.
+
+    # TODO: Implement the actual correction logic.
+
+    Args:
+        mode (int): Identifies which hypothesis the `nAnalyser` chose to explore.
+        subdiv (List[list]): The current subdivision of `delta`.
+        answers (List[Tuple[Optional[List[list]], bool]]): Results returned from each `nTask`,
+            executed on sets determined by the analyser's guess. Each tuple contains:
+            - either a list of 1 minimal failing subset (or `None`), and
+            - a boolean indicating whether the tested set failed.
+        matrix (List[List[bool]]): A `n x n` matrix where `matrix[i][j]` represents the result of the
+            test function applied to the intersection of the complements of the i-th and j-th subsets.
+        n (int): The size of the matrix.
+        config (BaseConfig.BaseConfig): Configuration object forwarded to downstream tasks.
+        me (Graph): Graph used for coordination or visualization, as in other tasks.
+
+    Raises:
+        RuntimeError: If the analyser's guess turns out to be incorrect.
+
+    Returns:
+        Tuple[List[list], bool]: A pair where:
+            - the first element is a list of 1 minimal failing subsets of `delta`;
+            - the second element is a boolean indicating whether the combined subset is failing.
+    """
+
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
