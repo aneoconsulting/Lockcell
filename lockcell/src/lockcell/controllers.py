@@ -7,7 +7,7 @@ Email    : erwan.tchale@gmail.com
 
 from pymonik import Pymonik, MultiResultHandle
 
-from .Tasks.Task import nTask
+from .Tasks.Task import test_set_task
 from .Tasks.utils import AminusB
 from .config.BaseConfig import BaseConfig
 import time
@@ -22,7 +22,7 @@ searchspace = [i for i in range(N)]
 
 
 def dd_min(searchspace: list, config: BaseConfig, graph=None):
-    return nTask.invoke(searchspace, 2, config, graph)  # type: ignore
+    return test_set_task.invoke(searchspace, 2, config, graph)  # type: ignore
 
 
 def RDDMIN(searchspace: list, func, finalfunc, config: BaseConfig, viz: MultiViz = MultiViz()):
@@ -82,7 +82,7 @@ def SRDDMIN(
                 config.setNbRun(run)
                 done = False
                 Args = [(res, 2, config) for res in result[0]]
-                storeResult = nTask.map_invoke(Args).wait().get()
+                storeResult = test_set_task.map_invoke(Args).wait().get()
 
                 # TODO: Quand l'implem de la disponibilité au plus tot sera prête faudra adapter
                 while not done:
@@ -122,9 +122,9 @@ def SRDDMIN(
                             searchspace = config.listminus(searchspace, all)
                     if nextArgs:
                         if not waiting.result_handles:
-                            storeResult = nTask.map_invoke(nextArgs)
+                            storeResult = test_set_task.map_invoke(nextArgs)
                         else:
-                            waiting.extend(nTask.map_invoke(nextArgs))
+                            waiting.extend(test_set_task.map_invoke(nextArgs))
                             storeResult = waiting
                     else:
                         if not waiting:

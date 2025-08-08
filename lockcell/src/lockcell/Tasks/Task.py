@@ -1,37 +1,29 @@
-"""
-Created on : 2025-07-07
-Author   : Erwan Tchaleu
-Email    : erwan.tchale@gmail.com
-
-"""
+from typing import List, Tuple, Optional, Union
 
 from pymonik import task, MultiResultHandle
 
-from typing import List, Tuple, Optional, Union
 from ..config.BaseConfig import BaseConfig
-from .utils import AminusB, SplitList
-
-
-### NTask
+from .utils import AminusB, split_list
 
 
 @task
-def nTask(
+def test_set_task(
     delta: list,
-    n: Union[int, List[list]],
+    n_split: int | list[list],
     config: BaseConfig,
     me,
-    Recurse=True,
-    Result: Optional[bool] = None,
-    oneSub: List[int] = [],
+    recurse=True,
+    result: bool | None = None,
+    one_sub: List[int] = [],
 ):
     """
-    The only task that execute a test. If the test passes, it returns the result. If it fails,
-    the task may resubmit additional sub-tests depending on the configuration.
+    Perform a test on set 'delta'. If the test passes, it returns the result. If it fails,
+    the task resubmits additional sub-tests if "recurse" is True, stop otherwise.
+    If Result is passed, the test is skipped.
 
     Args:
-        delta (list): List of elements to perturb during the test.
-        n (Union[int, List[list]]): Subdivision strategy — either an integer (split delta into `n` parts),
+        delta: List of elements to perturb during the test.
+        n_split: Subdivision strategy — either an integer (split delta into `n` parts),
             or an explicit partition provided as a list of lists.
         config (BaseConfig.BaseConfig): Configuration object used to execute the test.
         me (Graph): Graph used for dependency tracking or visualization.
@@ -55,31 +47,32 @@ def nTask(
 
     """
 
-    ### PrintGraph ###
+    # PrintGraph
     gPrint = me is not None
     if gPrint:
         from ..graph import Graph
 
-        me.setType(f"{n}Task")
+        me.setType(f"{n_split}Task")
 
     # Si le resultat est déjà connu on ne teste pas
     test = None
-    if Result is None:
-        test = config.Test(delta)
+    if result is None:
+        test = config.test_set(delta)
     else:
-        test = Result
+        test = result
 
-    if test:  # Test le delta passé en param
+    # Test le delta passé en param
+    if test:
         ### PrintGraph ###
         if gPrint:
             me.sout(me, [None, True])
         return None, True
 
-    if not Recurse:  # Si pas de récusivité
+    if not recurse:  # Si pas de récusivité
         ### PrintGraph ###
         if gPrint:
             me.sout(me, ["Input", False])
-        return "Input", False
+        return NO_OUTPUT, False
 
     # Si le test fail :
     # Si |Delta| = 1 on a fini
@@ -90,10 +83,10 @@ def nTask(
         return [delta], False
 
     # Sinon on split en n (= granularity)
-    if isinstance(n, int):
-        subdiv = SplitList(delta, n)
+    if isinstance(n_split, int):
+        subdiv = SplitList(delta, n_split)
     else:
-        subdiv = n
+        subdiv = n_split
     subdivArg = [
         (delta, 2, config, Graph() if gPrint else None) for delta in subdiv
     ]  # Mise en forme pour le passage en paramètre
@@ -102,13 +95,13 @@ def nTask(
     ### PrintGraph ###
     if gPrint:
         GrOut = Graph()
-    result = nTask.map_invoke(subdivArg)  # type: ignore
+    result = test_set_task.map_invoke(subdivArg)  # type: ignore
 
     ### PrintGraph ###
     if gPrint:
         counter = 0
         for i in subdivArg:
-            if counter in oneSub:
+            if counter in one_sub:
                 me.down(i[3], i[0], "o")
             else:
                 me.down(i[3], i[0])
@@ -118,10 +111,10 @@ def nTask(
                 out = out.out[0]
             GrOut.sup(*out.out)
         me.sout(GrOut, None)
-    if isinstance(n, list):
-        n = len(n)
+    if isinstance(n_split, list):
+        n_split = len(n_split)
 
-    return nAGG.invoke(subdiv, result, n, config, GrOut, oneSub, delegate=True)  # type: ignore
+    return nAGG.invoke(subdiv, result, n_split, config, GrOut, one_sub, delegate=True)  # type: ignore
 
 
 #########################################################################################################
@@ -225,7 +218,7 @@ def nAGG(
                 newdivisionArg.append((delta, 2, config, Graph() if gPrint else None))
                 newdivision.append(delta)
 
-        result = nTask.map_invoke(newdivisionArg)  # type: ignore
+        result = test_set_task.map_invoke(newdivisionArg)  # type: ignore
         GrOut = None
 
         ### PrintGraph ###
@@ -256,7 +249,7 @@ def nAGG(
         (AminusB(omega, delta), k, config, Graph() if gPrint else None, recursion)
         for delta in subdiv
     ]
-    result = nTask.map_invoke(nablas)  # type: ignore
+    result = test_set_task.map_invoke(nablas)  # type: ignore
     GrOut = None
 
     ### PrintGraph ###
@@ -373,7 +366,7 @@ def nAGG2(
         else:
             newdivisionArg.append((delta, 2, config, Graph() if gPrint else None))
             newdivision.append(delta)
-    result = nTask.map_invoke(newdivisionArg)  # type: ignore
+    result = test_set_task.map_invoke(newdivisionArg)  # type: ignore
     GrOut = None
 
     ### PrintGraph ###
@@ -395,6 +388,7 @@ def nAGG2(
 @task
 def nAnalyser(
     subdiv: List[list],
+    # Create custom type alias
     answers: List[Tuple[List[list] | None, bool]],
     n: int,
     config: BaseConfig,
@@ -439,21 +433,23 @@ def nAnalyser(
         me.setType(f"{n}Analyser - Down")
 
     test = False
-    idxs = []
+    failing_idxs = []
     idx = 0
-    for a in answers:
-        if not a[1]:
+    for answer in answers:
+        # Look at namedtuple
+        if not answer[1]:
             test = True
             idxs.append(idx)
         idx += 1
 
+    # Concatenate the subdiv into a single set
     omega = sum(subdiv, [])  # Utile pour faire tous les complémentaires etc
 
     if test:  ##### Si l'un des complémentaire a fail, on analyse
         # Est-on au niveau de découpage le plus fin
         granularityMax = len(omega) == n
         if granularityMax and (len(idxs) == 1):  # TODO: cf. preuve
-            rep = [AminusB(omega, subdiv[idxs[0]])]
+            complementary = [AminusB(omega, subdiv[idxs[0]])]
             ### PrintGraph ###
             if gPrint:
                 me.addLabel("One fail")
@@ -489,7 +485,7 @@ def nAnalyser(
                     newdivision.append(temp[0])
                     newdivision.append(temp[1])
                     idx_ += 2
-            return nTask.invoke(
+            return test_set_task.invoke(
                 nabla, newdivision, config, GrOut, True, False, oneSub, delegate=True
             )
 
@@ -555,7 +551,7 @@ def nAnalyser(
                     conjugate[idx + 1] = idx + 1 if not vals[idx + 1] else None  # type: ignore
                 idx += 2
 
-            Nanswers = nTask.map_invoke(Args)
+            Nanswers = test_set_task.map_invoke(Args)
             GrOut = None
 
             ### PrintGraph ###
@@ -591,7 +587,7 @@ def nAnalyser(
                         False,
                     )
                 )
-            answers = nTask.map_invoke(Args)
+            answers = test_set_task.map_invoke(Args)
 
             GrOut = None
 
@@ -637,7 +633,7 @@ def nAnalyser(
             newdivision.append(delta)
             oneSub.append(idx)
             idx += 1
-    result = nTask.map_invoke(newdivisionArg)  # type: ignore
+    result = test_set_task.map_invoke(newdivisionArg)  # type: ignore
     GrOut = None
 
     ### PrintGraph ###
@@ -833,7 +829,7 @@ def nAnalyserDown(
                 newdivision.append(temp[1])
                 idx_ += 2
         res = MultiResultHandle(
-            [nTask.invoke(newDelta, newdivision, config, Gr1, True, None, oneSub, delegate=True)]
+            [test_set_task.invoke(newDelta, newdivision, config, Gr1, True, None, oneSub, delegate=True)]
         )
 
         GrOut = None
@@ -910,7 +906,7 @@ def nAnalyserDown(
             (NewNabla1, newdivision1, config, Gr1, True, None, oneSub1),
             (NewNabla2, newdivision2, config, Gr2, True, None, oneSub2),
         ]
-        res = nTask.map_invoke(Args)
+        res = test_set_task.map_invoke(Args)
         GrOut = None
 
         ### PrintGraph ###
@@ -941,7 +937,7 @@ def nAnalyserDown(
             nabla = AminusB(omega, subdiv[idx])
             if idx not in lst:  # Si c'est un tache qui ne fail pas, on la génère simplement
                 results.append(
-                    nTask.invoke(nabla, n - 1, config, Graph(emphas="orange"), False, True)
+                    test_set_task.invoke(nabla, n - 1, config, Graph(emphas="orange"), False, True)
                 )
                 continue
 
@@ -968,7 +964,7 @@ def nAnalyserDown(
                     (nablaPrime, newdivision, config, graphs[-1] if gPrint else None, True, rep)
                 )  # Mise en forme pour le passage en paramètre
 
-            result = nTask.map_invoke(subdivArg)  # type: ignore
+            result = test_set_task.map_invoke(subdivArg)  # type: ignore
 
             fakeMother = None
 
