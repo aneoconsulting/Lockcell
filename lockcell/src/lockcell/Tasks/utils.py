@@ -1,8 +1,17 @@
 # List manipulers
 
 
-def split(tab: list, n: int):
-    """Stub to overload in subclasses"""
+def SplitList(tab: list, n: int):
+    """
+    Split a list into `n` nearly equal parts (difference of at most 1 element).
+
+    Args:
+        tab (list): The list to split.
+        n (int): The number of parts to create.
+
+    Returns:
+        List[list]: A list of `n` disjoint sublists of `tab` (original order preserved).
+    """
     subsets = []
     start = 0
     for i in range(n):
@@ -12,14 +21,26 @@ def split(tab: list, n: int):
     return subsets
 
 
-def listminus(c1: list, c2: list):
-    """Return a list of all elements of C1 that are not in C2."""
+def AminusB(A: list, B: list):
+    """
+    Return the elements present in list `A` but not in list `B`.
+
+    This performs a set-like difference while preserving the order of elements
+    from `A`. Duplicate elements in `A` are kept as long as they are not in `B`.
+
+    Args:
+        A (list): The source list.
+        B (list): The list of elements to exclude.
+
+    Returns:
+        list: A new list containing all items from `A` that are not in `B`.
+    """
     s2 = {}
-    for delta in c2:
+    for delta in A:
         s2[delta] = 1
 
     c = []
-    for delta in c1:
+    for delta in B:
         if delta not in s2:
             c.append(delta)
 

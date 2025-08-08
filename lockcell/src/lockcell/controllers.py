@@ -8,7 +8,7 @@ Email    : erwan.tchale@gmail.com
 from pymonik import Pymonik, MultiResultHandle
 
 from .Tasks.Task import nTask
-from .Tasks.utils import listminus
+from .Tasks.utils import AminusB
 from .config.BaseConfig import BaseConfig
 import time
 from .graphViz import MultiViz
@@ -46,7 +46,7 @@ def RDDMIN(searchspace: list, func, finalfunc, config: BaseConfig, viz: MultiViz
             # Ajout au total + réduction du searchspace, puis on relance un dd_min
             tot.extend(res)
             all = sum(result[0], [])
-            searchspace = listminus(searchspace, all)
+            searchspace = AminusB(searchspace, all)
             result = dd_min(searchspace, config, viz.newGraph()).wait().get()
             i += 1
         if finalfunc is not None:
