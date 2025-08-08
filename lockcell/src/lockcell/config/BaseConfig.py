@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class BaseConfig(ABC):
-    def __init__(self, nbRun=None):
+    def __init__(self, nbRun: Optional[int] = None):
         self.nbRun = 1
         if nbRun is not None:
             self.nbRun = nbRun
@@ -21,5 +22,5 @@ class BaseConfig(ABC):
         return self
 
     @abstractmethod
-    def copy(self) -> "BaseConfig":
-        pass
+    def __copy__(self) -> "BaseConfig":
+        raise NotImplementedError("Cannot copy the abstract class BaseConfig")
