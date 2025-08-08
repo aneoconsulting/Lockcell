@@ -9,7 +9,7 @@ from pymonik import task, MultiResultHandle
 
 from typing import List, Tuple, Optional, Union
 from ..config.BaseConfig import BaseConfig
-from .utils import listminus, split
+from .utils import AminusB, SplitList
 
 
 ### NTask
@@ -61,7 +61,7 @@ def nTask(
 
     # Sinon on split en n (= granularity)
     if isinstance(n, int):
-        subdiv = split(delta, n)
+        subdiv = SplitList(delta, n)
     else:
         subdiv = n
     subdivArg = [
@@ -158,7 +158,7 @@ def nAGG(
         k = min(2 * n, len(omega))
         for delta in subdiv:  # Mise en forme des lis
             if len(delta) >= 2:
-                temp = split(delta, 2)
+                temp = SplitList(delta, 2)
                 newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
                 newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
                 newdivision.append(temp[0])
@@ -195,7 +195,7 @@ def nAGG(
     omega = sum(subdiv, [])
     k = max(2, n - 1)
     nablas = [
-        (listminus(omega, delta), k, config, Graph() if gPrint else None, recursion)
+        (AminusB(omega, delta), k, config, Graph() if gPrint else None, recursion)
         for delta in subdiv
     ]
     result = nTask.map_invoke(nablas)  # type: ignore
@@ -280,7 +280,7 @@ def nAGG2(
     k = min(2 * n, len(omega))
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
-            temp = split(delta, 2)
+            temp = SplitList(delta, 2)
             newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
             newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
             newdivision.append(temp[0])
@@ -338,7 +338,7 @@ def nAnalyser(
         # Est-on au niveau de découpage le plus fin
         granularityMax = len(omega) == n
         if granularityMax and (len(idxs) == 1):  # TODO: cf. preuve
-            rep = [listminus(omega, subdiv[idxs[0]])]
+            rep = [AminusB(omega, subdiv[idxs[0]])]
             ### PrintGraph ###
             if gPrint:
                 me.addLabel("One fail")
@@ -349,7 +349,7 @@ def nAnalyser(
         if len(idxs) == 1:  # Si un seul fail on recurse dessus
             # On prépare les arguments
             idx = idxs[0]
-            nabla = listminus(omega, subdiv[idx])
+            nabla = AminusB(omega, subdiv[idx])
 
             GrOut = None
             ### PrintGraph ###
@@ -370,7 +370,7 @@ def nAnalyser(
                     oneSub.append(idx_)
                     idx_ += 1
                 else:
-                    temp = split(div, 2)
+                    temp = SplitList(div, 2)
                     newdivision.append(temp[0])
                     newdivision.append(temp[1])
                     idx_ += 2
@@ -398,8 +398,8 @@ def nAnalyser(
                     if not vals[idx]:
                         for j in range(idx + 1, n):
                             if not vals[j]:
-                                intersection = listminus(omega, subdiv[idx])
-                                intersection = listminus(intersection, subdiv[j])
+                                intersection = AminusB(omega, subdiv[idx])
+                                intersection = AminusB(intersection, subdiv[j])
                                 Args.append(
                                     (intersection, 2, config, Graph() if gPrint else None, False)
                                 )
@@ -408,8 +408,8 @@ def nAnalyser(
                 if not vals[idx]:
                     for j in range(idx + 2, n):
                         if not vals[j]:
-                            intersection = listminus(omega, subdiv[idx])
-                            intersection = listminus(intersection, subdiv[j])
+                            intersection = AminusB(omega, subdiv[idx])
+                            intersection = AminusB(intersection, subdiv[j])
                             Args.append(
                                 (intersection, 2, config, Graph() if gPrint else None, False)
                             )
@@ -417,8 +417,8 @@ def nAnalyser(
                 if not vals[idx]:
                     for j in range(idx + 1, n):
                         if not vals[j]:
-                            intersection = listminus(omega, subdiv[idx])
-                            intersection = listminus(intersection, subdiv[j])
+                            intersection = AminusB(omega, subdiv[idx])
+                            intersection = AminusB(intersection, subdiv[j])
                             Args.append(
                                 (intersection, 2, config, Graph() if gPrint else None, False)
                             )
@@ -468,7 +468,7 @@ def nAnalyser(
                 k = min(n - 1, len(omega) - len(subdiv[idx]))
                 Args.append(
                     (
-                        listminus(omega, subdiv[idx]),
+                        AminusB(omega, subdiv[idx]),
                         k,
                         config,
                         Graph(emphas="orange") if gPrint else None,
@@ -511,7 +511,7 @@ def nAnalyser(
     idx = 0
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
-            temp = split(delta, 2)
+            temp = SplitList(delta, 2)
             newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
             newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
             newdivision.append(temp[0])
@@ -667,7 +667,7 @@ def nAnalyserDown(
         # Launching calculus on the full intersection
         newDelta = omega
         for idx in lst:
-            newDelta = listminus(newDelta, subdiv[idx])
+            newDelta = AminusB(newDelta, subdiv[idx])
 
         Gr1 = Graph() if gPrint else None
         newdivision = []
@@ -681,7 +681,7 @@ def nAnalyserDown(
                 oneSub.append(idx_)
                 idx_ += 1
             else:
-                temp = split(subdiv[idx], 2)
+                temp = SplitList(subdiv[idx], 2)
                 newdivision.append(temp[0])
                 newdivision.append(temp[1])
                 idx_ += 2
@@ -720,12 +720,12 @@ def nAnalyserDown(
 
         NewNabla1 = omega
         for idx in tab1:
-            NewNabla1 = listminus(NewNabla1, subdiv[idx])
+            NewNabla1 = AminusB(NewNabla1, subdiv[idx])
         Gr1 = Graph() if gPrint else None
 
         NewNabla2 = omega
         for idx in tab2:
-            NewNabla2 = listminus(NewNabla2, subdiv[idx])
+            NewNabla2 = AminusB(NewNabla2, subdiv[idx])
         Gr2 = Graph() if gPrint else None
 
         newdivision1 = []
@@ -739,7 +739,7 @@ def nAnalyserDown(
                 oneSub1.append(idx_1)
                 idx_1 += 1
             else:
-                temp = split(subdiv[idx], 2)
+                temp = SplitList(subdiv[idx], 2)
                 newdivision1.append(temp[0])
                 newdivision1.append(temp[1])
                 idx_1 += 2
@@ -754,7 +754,7 @@ def nAnalyserDown(
                 oneSub2.append(idx_2)
                 idx_2 += 1
             else:
-                temp = split(subdiv[idx], 2)
+                temp = SplitList(subdiv[idx], 2)
                 newdivision2.append(temp[0])
                 newdivision2.append(temp[1])
                 idx_2 += 2
@@ -791,7 +791,7 @@ def nAnalyserDown(
         results = []
         fakesons = []
         for idx in range(n):  # Correspond à une n-1 Task
-            nabla = listminus(omega, subdiv[idx])
+            nabla = AminusB(omega, subdiv[idx])
             if idx not in lst:  # Si c'est un tache qui ne fail pas, on la génère simplement
                 results.append(
                     nTask.invoke(nabla, n - 1, config, Graph(emphas="orange"), False, True)
@@ -804,7 +804,7 @@ def nAnalyserDown(
             for i in range(n):
                 if i == idx:
                     continue
-                nablaPrime = listminus(nabla, subdiv[i])
+                nablaPrime = AminusB(nabla, subdiv[i])
                 newSubdiv.append(subdiv[i])
                 rep = matrix[idx][i]
                 ### PrintGraph ###
