@@ -58,7 +58,7 @@ def nTask(
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from ..graph import Graph
+        from ..graph import Node
 
         me.setType(f"{n}Task")
 
@@ -95,13 +95,13 @@ def nTask(
     else:
         subdiv = n
     subdivArg = [
-        (delta, 2, config, Graph() if gPrint else None) for delta in subdiv
+        (delta, 2, config, Node() if gPrint else None) for delta in subdiv
     ]  # Mise en forme pour le passage en paramètre
     GrOut = None
 
     ### PrintGraph ###
     if gPrint:
-        GrOut = Graph()
+        GrOut = Node()
     result = nTask.map_invoke(subdivArg)  # type: ignore
 
     ### PrintGraph ###
@@ -168,7 +168,7 @@ def nAGG(
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from ..graph import Graph
+        from ..graph import Node
 
         me.setType(f"{n}AGG")
 
@@ -217,12 +217,12 @@ def nAGG(
         for delta in subdiv:  # Mise en forme des lis
             if len(delta) >= 2:
                 temp = SplitList(delta, 2)
-                newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
-                newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
+                newdivisionArg.append((temp[0], 2, config, Node() if gPrint else None))
+                newdivisionArg.append((temp[1], 2, config, Node() if gPrint else None))
                 newdivision.append(temp[0])
                 newdivision.append(temp[1])
             else:
-                newdivisionArg.append((delta, 2, config, Graph() if gPrint else None))
+                newdivisionArg.append((delta, 2, config, Node() if gPrint else None))
                 newdivision.append(delta)
 
         result = nTask.map_invoke(newdivisionArg)  # type: ignore
@@ -230,7 +230,7 @@ def nAGG(
 
         ### PrintGraph ###
         if gPrint:
-            GrOut = Graph()
+            GrOut = Node()
             for i in newdivisionArg:
                 me.down(i[3], i[0])
                 GrOut.sup(*i[3].out)
@@ -253,7 +253,7 @@ def nAGG(
     omega = sum(subdiv, [])
     k = max(2, n - 1)
     nablas = [
-        (AminusB(omega, delta), k, config, Graph() if gPrint else None, recursion)
+        (AminusB(omega, delta), k, config, Node() if gPrint else None, recursion)
         for delta in subdiv
     ]
     result = nTask.map_invoke(nablas)  # type: ignore
@@ -261,7 +261,7 @@ def nAGG(
 
     ### PrintGraph ###
     if gPrint:
-        GrOut = Graph()
+        GrOut = Node()
         counter = 0
         for i in nablas:
             if counter in oneSub:
@@ -319,7 +319,7 @@ def nAGG2(
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from ..graph import Graph
+        from ..graph import Node
 
         me.setType(f"{n}AGG2")
 
@@ -366,19 +366,19 @@ def nAGG2(
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
             temp = SplitList(delta, 2)
-            newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
-            newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
+            newdivisionArg.append((temp[0], 2, config, Node() if gPrint else None))
+            newdivisionArg.append((temp[1], 2, config, Node() if gPrint else None))
             newdivision.append(temp[0])
             newdivision.append(temp[1])
         else:
-            newdivisionArg.append((delta, 2, config, Graph() if gPrint else None))
+            newdivisionArg.append((delta, 2, config, Node() if gPrint else None))
             newdivision.append(delta)
     result = nTask.map_invoke(newdivisionArg)  # type: ignore
     GrOut = None
 
     ### PrintGraph ###
     if gPrint:
-        GrOut = Graph()
+        GrOut = Node()
         for i in newdivisionArg:
             me.down(i[3], i[0])
             GrOut.sup(*i[3].out)
@@ -434,7 +434,7 @@ def nAnalyser(
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from ..graph import Graph
+        from ..graph import Node
 
         me.setType(f"{n}Analyser - Down")
 
@@ -470,7 +470,7 @@ def nAnalyser(
             ### PrintGraph ###
             if gPrint:
                 me.addLabel("One fail")
-                GrOut = Graph(emphas="orange")
+                GrOut = Node(emphas="orange")
                 me.down(GrOut, nabla)
                 me.sout(GrOut, None)
 
@@ -516,7 +516,7 @@ def nAnalyser(
                                 intersection = AminusB(omega, subdiv[idx])
                                 intersection = AminusB(intersection, subdiv[j])
                                 Args.append(
-                                    (intersection, 2, config, Graph() if gPrint else None, False)
+                                    (intersection, 2, config, Node() if gPrint else None, False)
                                 )
                     idx += 1
                     continue
@@ -526,7 +526,7 @@ def nAnalyser(
                             intersection = AminusB(omega, subdiv[idx])
                             intersection = AminusB(intersection, subdiv[j])
                             Args.append(
-                                (intersection, 2, config, Graph() if gPrint else None, False)
+                                (intersection, 2, config, Node() if gPrint else None, False)
                             )
                 idx += 1
                 if not vals[idx]:
@@ -535,7 +535,7 @@ def nAnalyser(
                             intersection = AminusB(omega, subdiv[idx])
                             intersection = AminusB(intersection, subdiv[j])
                             Args.append(
-                                (intersection, 2, config, Graph() if gPrint else None, False)
+                                (intersection, 2, config, Node() if gPrint else None, False)
                             )
                 idx += 1
 
@@ -560,7 +560,7 @@ def nAnalyser(
 
             ### PrintGraph ###
             if gPrint:
-                GrOut = Graph()
+                GrOut = Node()
                 for arg in Args:
                     me.down(arg[3], arg[0])
                     GrOut.sup(*arg[3].out)
@@ -586,7 +586,7 @@ def nAnalyser(
                         AminusB(omega, subdiv[idx]),
                         k,
                         config,
-                        Graph(emphas="orange") if gPrint else None,
+                        Node(emphas="orange") if gPrint else None,
                         True,
                         False,
                     )
@@ -597,7 +597,7 @@ def nAnalyser(
 
             ### PrintGraph ###
             if gPrint:
-                GrOut = Graph()
+                GrOut = Node()
                 for arg in Args:
                     me.down(arg[3], arg[0])
                     GrOut.sup(*arg[3].out)
@@ -627,13 +627,13 @@ def nAnalyser(
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
             temp = SplitList(delta, 2)
-            newdivisionArg.append((temp[0], 2, config, Graph() if gPrint else None))
-            newdivisionArg.append((temp[1], 2, config, Graph() if gPrint else None))
+            newdivisionArg.append((temp[0], 2, config, Node() if gPrint else None))
+            newdivisionArg.append((temp[1], 2, config, Node() if gPrint else None))
             newdivision.append(temp[0])
             newdivision.append(temp[1])
             idx += 2
         else:
-            newdivisionArg.append((delta, 2, config, Graph() if gPrint else None))
+            newdivisionArg.append((delta, 2, config, Node() if gPrint else None))
             newdivision.append(delta)
             oneSub.append(idx)
             idx += 1
@@ -642,7 +642,7 @@ def nAnalyser(
 
     ### PrintGraph ###
     if gPrint:
-        GrOut = Graph()
+        GrOut = Node()
         for i in newdivisionArg:
             me.down(i[3], i[0])
             GrOut.sup(*i[3].out)
@@ -700,7 +700,7 @@ def nAnalyserDown(
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
-        from ..graph import Graph
+        from ..graph import Node
 
         me.setType(f"{n}Analyser - Down")
 
@@ -816,7 +816,7 @@ def nAnalyserDown(
         for idx in lst:
             newDelta = AminusB(newDelta, subdiv[idx])
 
-        Gr1 = Graph() if gPrint else None
+        Gr1 = Node() if gPrint else None
         newdivision = []
         oneSub = []
         idx_ = 0
@@ -841,7 +841,7 @@ def nAnalyserDown(
         ### PrintGraph ###
         if gPrint:
             me.addLabel("One subset")
-            GrOut = Graph(emphas="blue")
+            GrOut = Node(emphas="blue")
             me.down(Gr1, newDelta)
             out = Gr1.out[0]
             while out != out.out[0]:
@@ -868,12 +868,12 @@ def nAnalyserDown(
         NewNabla1 = omega
         for idx in tab1:
             NewNabla1 = AminusB(NewNabla1, subdiv[idx])
-        Gr1 = Graph() if gPrint else None
+        Gr1 = Node() if gPrint else None
 
         NewNabla2 = omega
         for idx in tab2:
             NewNabla2 = AminusB(NewNabla2, subdiv[idx])
-        Gr2 = Graph() if gPrint else None
+        Gr2 = Node() if gPrint else None
 
         newdivision1 = []
         oneSub1 = []
@@ -916,7 +916,7 @@ def nAnalyserDown(
         ### PrintGraph ###
         if gPrint:
             me.addLabel("Two subsets")
-            GrOut = Graph(emphas="blue")
+            GrOut = Node(emphas="blue")
             me.down(Gr1, NewNabla1)
             out = Gr1.out[0]
             while out != out.out[0]:
@@ -941,7 +941,7 @@ def nAnalyserDown(
             nabla = AminusB(omega, subdiv[idx])
             if idx not in lst:  # Si c'est un tache qui ne fail pas, on la génère simplement
                 results.append(
-                    nTask.invoke(nabla, n - 1, config, Graph(emphas="orange"), False, True)
+                    nTask.invoke(nabla, n - 1, config, Node(emphas="orange"), False, True)
                 )
                 continue
 
@@ -956,7 +956,7 @@ def nAnalyserDown(
                 rep = matrix[idx][i]
                 ### PrintGraph ###
                 if gPrint:
-                    graphs.append(Graph(emphas="orange"))
+                    graphs.append(Node(emphas="orange"))
                 newdivision = []
                 for j in range(n):
                     if j == idx:
@@ -974,7 +974,7 @@ def nAnalyserDown(
 
             ### PrintGraph ###
             if gPrint:
-                fakeMother = Graph(emphas="orange")
+                fakeMother = Node(emphas="orange")
                 fakeMother.setType(f"{n - 1}Task")
                 me.down(fakeMother, nabla)
                 fakesons.append(fakeMother)
@@ -983,7 +983,7 @@ def nAnalyserDown(
 
             ### PrintGraph ###
             if gPrint:
-                GrOut1 = Graph()
+                GrOut1 = Node()
 
                 for i in subdivArg:
                     fakeMother.down(i[3], i[0])
@@ -1000,7 +1000,7 @@ def nAnalyserDown(
 
         ### PrintGraph ###
         if gPrint:
-            GrOut = Graph()
+            GrOut = Node()
 
             for i in fakesons:
                 out = i.out[0]
