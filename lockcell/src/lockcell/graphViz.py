@@ -8,7 +8,7 @@ Email    : erwan.tchale@gmail.com
 ### AFFICHAGE DU GRAPHE DES TÂCHES
 
 from graphviz import Digraph
-from .graph import Graph
+from .graph import Node
 from typing import List, Optional
 
 
@@ -33,7 +33,7 @@ class MultiViz:
         self.active: bool = active
         self.graphs: List[VizPrint] = []
 
-    def newGraph(self, fake=False) -> Optional[Graph]:
+    def newGraph(self, fake=False) -> Optional[Node]:
         """
         newGraph Creates a new Graph and returns it if active
 
@@ -41,7 +41,7 @@ class MultiViz:
             fake (bool, optional): if True returns None. Defaults to False.
 
         Returns:
-            Optional[Graph]: The root of the Graph
+            Optional[Node]: The root of the Graph
         """
         if fake:
             return None
@@ -85,9 +85,9 @@ class VizPrint:
         self.Gr = Digraph(format="svg")
         self.Gr.graph_attr.update(ratio="expand")
         self.Gr.attr(rankdir="TB")
-        self.start = Graph()
+        self.start = Node()
 
-    def findOut(self, g: Graph) -> Graph:
+    def findOut(self, g: Node) -> Node:
         """
         Resolve delegation of tasks in the graph.
 
@@ -153,10 +153,10 @@ class VizPrint:
 
 
         Args:
-            g (Graph): The node we want to get the output
+            g (Node): The node we want to get the output
 
         Returns:
-            Graph: The node that outputs
+            Node: The node that outputs
         """
         out = g.out[0]
         while out != out.out[0]:
@@ -166,7 +166,7 @@ class VizPrint:
     def TrueFalse(self, val) -> str:
         return "green" if val else "black"
 
-    def UpColorSelector(self, g: Graph) -> List[str]:
+    def UpColorSelector(self, g: Node) -> List[str]:
         """
         UpColorSelector For Aggregators, give the color of the edges.
         If two inputs have a common subset in their answer (which is a list of subset) color the edge in orange
@@ -176,7 +176,7 @@ class VizPrint:
             This function can be use on non aggregator task and will only color the edges in black, this allows us to call it every time without determining the type of tas represented by the node (we treat each node independently of it's type of task (cf print method))
 
         Args:
-            g (Graph): The aggregator
+            g (Node): The aggregator
 
         Returns:
             List[str]: the list of the color of edges between g and it's input
@@ -215,7 +215,7 @@ class VizPrint:
                     res[idx] = "red"
         return res
 
-    def BuildGraph(self, g: Graph):
+    def BuildGraph(self, g: Node):
         """
         Recursively prints the computation graph starting from the given node `g`.
 
