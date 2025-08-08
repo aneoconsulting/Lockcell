@@ -65,7 +65,7 @@ def nTask(
     # Si le resultat est déjà connu on ne teste pas
     test = None
     if Result is None:
-        test = config.Test(delta)
+        test = config.test_(delta)
     else:
         test = Result
 

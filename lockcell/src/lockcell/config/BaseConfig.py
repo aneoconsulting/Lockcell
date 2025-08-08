@@ -10,14 +10,18 @@ class BaseConfig(ABC):
         self.mode = "default"
         pass
 
-    def setMode(self, mode):
+    def set_mode(self, mode):
         self.mode = mode
 
     @abstractmethod
-    def Test(self, subspace) -> bool:
+    def test_(self, subspace) -> bool:
         pass
 
-    def setNbRun(self, nbRun):
+    @abstractmethod
+    def generate_search_space(self) -> list:
+        pass
+
+    def set_nb_run(self, nbRun):
         self.nbRun = nbRun
         return self
 
