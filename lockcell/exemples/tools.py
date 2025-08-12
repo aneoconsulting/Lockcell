@@ -12,15 +12,15 @@ def counter(n: int):
 
 
 def RDDMin_print(res, i):
-    return counter(i) + " results : " + res.__str__() + "\n" + "-" * 80
+    print(counter(i) + " results : " + res.__str__() + "\n" + "-" * 80)
 
 
 def SRDDMin_print(res):
-    return "Found : " + res.__str__() + "\n" + "-" * 80
+    print("Found : " + res.__str__() + "\n" + "-" * 80)
 
 
 def final_print(res, i):
-    return (
+    print(
         "\n"
         + "-" * 80
         + "\n"
