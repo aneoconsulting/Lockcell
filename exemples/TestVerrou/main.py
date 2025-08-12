@@ -14,13 +14,12 @@ Viz = MultiViz(active=PRINT_GRAPH)
 
 ## For verrou Test
 config = VerrouConf.ConfigVerrou(constants.USER_WORKING_DIR, "DD_RUN", "DD_CMP.py")
-config.setMode("Analyse")
+config.set_mode("Analyse")
 input("press Enter to continue...")
 
 # Parse the file to get the deltas
 print("[INFO] Parsing the original file")
-config.parseGenRunFile()
-searchspace = config.generateSearchSpace()
+searchspace = config.generate_search_space()
 print("[INFO] Parsing done, searchspace generated")
 
 config.workdir = Path(constants.TASK_WORKING_DIR + "/verrou")
