@@ -9,7 +9,7 @@ from pymonik import task, MultiResultHandle
 
 from typing import List, Tuple, Optional, Union
 from ..config.BaseConfig import BaseConfig
-from .utils import AminusB, SplitList
+from .utils import AminusB, split_list
 
 
 ### NTask
@@ -91,7 +91,7 @@ def nTask(
 
     # Sinon on split en n (= granularity)
     if isinstance(n, int):
-        subdiv = SplitList(delta, n)
+        subdiv = split_list(delta, n)
     else:
         subdiv = n
     subdivArg = [
@@ -216,7 +216,7 @@ def nAGG(
         k = min(2 * n, len(omega))
         for delta in subdiv:  # Mise en forme des lis
             if len(delta) >= 2:
-                temp = SplitList(delta, 2)
+                temp = split_list(delta, 2)
                 newdivisionArg.append((temp[0], 2, config, Node() if gPrint else None))
                 newdivisionArg.append((temp[1], 2, config, Node() if gPrint else None))
                 newdivision.append(temp[0])
@@ -365,7 +365,7 @@ def nAGG2(
     k = min(2 * n, len(omega))
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
-            temp = SplitList(delta, 2)
+            temp = split_list(delta, 2)
             newdivisionArg.append((temp[0], 2, config, Node() if gPrint else None))
             newdivisionArg.append((temp[1], 2, config, Node() if gPrint else None))
             newdivision.append(temp[0])
@@ -485,7 +485,7 @@ def nAnalyser(
                     oneSub.append(idx_)
                     idx_ += 1
                 else:
-                    temp = SplitList(div, 2)
+                    temp = split_list(div, 2)
                     newdivision.append(temp[0])
                     newdivision.append(temp[1])
                     idx_ += 2
@@ -626,7 +626,7 @@ def nAnalyser(
     idx = 0
     for delta in subdiv:  # Mise en forme des lis
         if len(delta) >= 2:
-            temp = SplitList(delta, 2)
+            temp = split_list(delta, 2)
             newdivisionArg.append((temp[0], 2, config, Node() if gPrint else None))
             newdivisionArg.append((temp[1], 2, config, Node() if gPrint else None))
             newdivision.append(temp[0])
@@ -828,7 +828,7 @@ def nAnalyserDown(
                 oneSub.append(idx_)
                 idx_ += 1
             else:
-                temp = SplitList(subdiv[idx], 2)
+                temp = split_list(subdiv[idx], 2)
                 newdivision.append(temp[0])
                 newdivision.append(temp[1])
                 idx_ += 2
@@ -886,7 +886,7 @@ def nAnalyserDown(
                 oneSub1.append(idx_1)
                 idx_1 += 1
             else:
-                temp = SplitList(subdiv[idx], 2)
+                temp = split_list(subdiv[idx], 2)
                 newdivision1.append(temp[0])
                 newdivision1.append(temp[1])
                 idx_1 += 2
@@ -901,7 +901,7 @@ def nAnalyserDown(
                 oneSub2.append(idx_2)
                 idx_2 += 1
             else:
-                temp = SplitList(subdiv[idx], 2)
+                temp = split_list(subdiv[idx], 2)
                 newdivision2.append(temp[0])
                 newdivision2.append(temp[1])
                 idx_2 += 2
