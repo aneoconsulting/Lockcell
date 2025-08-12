@@ -1,7 +1,7 @@
 # List manipulers
 
 
-def SplitList(tab: list, n: int):
+def split_list(tab: list, n: int):
     """
     Split a list into `n` nearly equal parts (difference of at most 1 element).
 
@@ -36,11 +36,11 @@ def AminusB(A: list, B: list):
         list: A new list containing all items from `A` that are not in `B`.
     """
     s2 = {}
-    for delta in A:
+    for delta in B:
         s2[delta] = 1
 
     c = []
-    for delta in B:
+    for delta in A:
         if delta not in s2:
             c.append(delta)
 
