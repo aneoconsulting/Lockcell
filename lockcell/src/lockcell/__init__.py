@@ -8,7 +8,7 @@ from . import VerrouConf
 
 # Modules to expose to the user
 from .graphViz import MultiViz
-from .controllers import RDDMIN, SRDDMIN
+from .controllers import Lockcell
 from .VerrouConf import ConfigVerrou
 from .constants import USER_SCRIPTS_PATH, USER_WORKING_DIR, TASK_WORKING_DIR
 from .config.BaseConfig import BaseConfig
@@ -24,8 +24,7 @@ cloudpickle.register_pickle_by_value(VerrouConf)
 # Exposing key classes/functions at package level
 __all__ = [
     "MultiViz",
-    "RDDMIN",
-    "SRDDMIN",
+    "Lockcell",
     "BaseConfig",
     "TestConfig",
     "ConfigVerrou",
