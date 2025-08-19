@@ -4,158 +4,204 @@ Author   : Erwan Tchaleu
 Email    : erwan.tchale@gmail.com
 
 """
-import time
+from enum import Enum
 from copy import copy
 from typing import Any
+from abc import ABC, abstractmethod
 
-from pymonik import Pymonik, MultiResultHandle, ResultHandle
+from lockcell.Tasks.Results import RDDMinResult, TaskResult
+from pymonik import Pymonik, ResultHandle
+from yaml import Node
 
 from .Tasks.Task import nTask
+from .Tasks.TaskMaster import running_rddmin_task
 from .Tasks.utils import AminusB
 from .config.BaseConfig import BaseConfig
-from .status import Status
-from .graphViz import MultiViz
+from .utils import Phase, Status, RDDMinStatus
+
+class Job(Enum):
+    DDMin = "ddmin"
+    RDDMIN = "rddmin"   
+
 
 class Lockcell:
-    def __init__(self, endpoint :str | None, config: BaseConfig, python_environnement : dict[str, Any] = {}) -> None:
+
+    # Interface for a way to execute Delta Debug (like DDMin, RDDMin, SRDDMin, ...)
+    class DeltaDebugHandler(ABC):
+        def __init__(self, lock : "Lockcell"):
+            self._lockcell = lock
+            self._lockcell._status = Status(Phase.JOB_CREATED)
+        
+        @abstractmethod
+        def start(self):
+            self._lockcell._status = Status(Phase.RUNNING)
+
+        @abstractmethod
+        def update(self) -> Any:
+            pass
+
+        @abstractmethod
+        def wait(self) -> Any:
+            pass
+
+        @property
+        def done(self):
+            return self._lockcell._job_status == Phase.COMPLETED
+        
+        @abstractmethod
+        def get_result(self) -> list[list]:
+            if not self.done:
+                raise RuntimeError("get_result can only be used when the result is ready (use the DeltaDebugHandler.done property to verify it)")
+        
+        def _is_ready(self, result : ResultHandle) -> bool:
+            armonik_result_pointer = self._lockcell._session._results_client.get_result(result.result_id)
+            return armonik_result_pointer.status == 2
+
+    # Register that makes the correspondence between the jobs and the names
+    _JOB_TO_CLASS: dict[Job, type[DeltaDebugHandler]] = {}
+
+
+    class RDDMin(DeltaDebugHandler):
+        def __init__(self, lock : "Lockcell"):
+            super().__init__(lock)
+            self._lockcell._job_status = RDDMinStatus(Phase.JOB_CREATED)
+            self._last_known_iteration : RDDMinResult | None = None
+            self._failing_subset : list[list] = []
+
+
+        def start(self):
+            self._last_known_iteration = running_rddmin_task.invoke(self._lockcell._search_space, self._lockcell._config).wait().get() # type: ignore
+            self._lockcell._job_status.phase = Phase.RUNNING
+            self._lockcell._job_status.step = 1
+        
+        def update(self) -> list[list[list]]:
+            if not self._last_known_iteration:
+                raise RuntimeError("Cannot update a result that is not started")
+            
+            new_results : list[list[list]] = []
+            # Can give the impression that we dont take into account the last iteration but actually the last one only asses that the previous one terminated with true testing the global delta so no need to compute it
+            while self._last_known_iteration.next is not None:
+                if self._is_ready(self._last_known_iteration.iteration_result):
+
+                    # Retrieve the result of the last iteration
+                    intermediate_result : TaskResult = self._last_known_iteration.iteration_result.wait().get()
+                    new_results.append(intermediate_result.failing_subset_list)
+                    self._failing_subset.extend(intermediate_result.failing_subset_list)
+                    # sum(list, []) concatenate a list of list of elt to make it a giant list of elt
+                    self._lockcell._reduce_search_space(sum(intermediate_result.failing_subset_list, []))
+
+                    # goes to the next iteration
+                    self._last_known_iteration = self._last_known_iteration.next.wait().get()
+                else:
+                    return new_results
+            self._lockcell._job_status.phase = Phase.COMPLETED
+            return new_results
+
+        def get_result(self) -> list[list]:
+            super().get_result()
+            return self._failing_subset    
+
+    class DDMin(DeltaDebugHandler):
+        def __init__(self, lock: "Lockcell", graph_root : Node  | None = None):
+            super().__init__(lock)
+            self._expected_result : ResultHandle[TaskResult]
+            self._result : list[list] = []
+            self._graph_root = graph_root
+
+        def start(self):
+            super().start()
+            self._expected_result = nTask.invoke(self._lockcell._search_space, 2, self._lockcell._config, self._graph_root, pymonik=self._lockcell._session)
+
+        
+        def update(self) -> list[list]:
+            if self._is_ready(self._expected_result):
+                self._result = self._expected_result.wait().get().failing_subset_list
+                self._lockcell._status.phase = Phase.COMPLETED
+                return self._result
+            return []
+
+        def wait(self):
+            self._expected_result.wait()
+            print("lol")
+            return self
+        
+        def get_result(self) -> list[list]:
+            super().get_result()
+            return self._result
+
+    _JOB_TO_CLASS[Job.RDDMIN] = RDDMin
+    _JOB_TO_CLASS[Job.DDMin] = DDMin
+
+
+
+    def __init__(self, endpoint :str | None, config: BaseConfig, *, partition : str = "pymonik", environnement : dict[str, Any] = {}) -> None:
 
         # Configuration
         self._endpoint : str | None = endpoint
-        self._config : BaseConfig = config
-        self._search_space : list = config.generate_search_space()
-        self._pymonik_environnement : dict[str, Any] = python_environnement
+        self._config : BaseConfig = copy(config)
+        self._search_space : list = self._config.generate_search_space()
+        self._environnement : dict[str, Any] = environnement
 
-        self._default_session = Pymonik(endpoint=self._endpoint, partition="pymonik", environment=self._pymonik_environnement).__enter__()
-        self._sessions : list[tuple[Pymonik, int]]= []
+        self._session = Pymonik(endpoint=self._endpoint, partition=partition, environment=self._environnement)
 
+        # Data of the delta Debug
+        self._result : list[list] = []
+        self._handler : Lockcell.DeltaDebugHandler | None = None
+        
         # Status
-        self._running : bool = False
+        self._job_status : Status = Status(Phase.NO_JOB)
+        self._open : bool = False
 
         # Constants
         self.INTERNAL_SP = None
     
     def __del__(self):
-        for session in self._sessions:
-            session[0].__exit__(None, None, None)
-        self._default_session.__exit__(None, None, None)
+        self.close()
 
-    ### DeltaDebug code
+    ### User functions
 
-    def dd_min(self, search_space : list | None, config: BaseConfig, graph=None):
-        if search_space:
-            return nTask.invoke(search_space, 2, config, graph).wait().get()  #type: ignore
-        return nTask.invoke(self._search_space, 2, config, graph).wait().get()  #type: ignore
+    def run(self):
+        if not self._open:
+            raise RuntimeError("Cannot run a job on a closed session, please use Lockcell.open() before running anything")
+        if self._handler is None:
+            raise RuntimeError("Cannot run a job if there is not job, please use Lockcell.run_[JOB_NAME] instead or use Lockcell.set_job before the run call")
+        self._handler.start()
 
-    def _dd_min(self, search_space : list | None, config: BaseConfig, graph=None):
-        if search_space:
-            return nTask.invoke(search_space, 2, config, graph)  #type: ignore
-        return nTask.invoke(self._search_space, 2, config, graph, pymonik=self._default_session)  #type: ignore
+    def run_rddmin(self):
+        self.set_job(Job.RDDMIN)
+        self.run()
+    
+    def run_ddmin(self):
+        self.set_job(Job.DDMin)
+        self.run()
 
-    def RDDMIN(self, log_function = None, final_log_function = None, viz: MultiViz = MultiViz()):
-        start = time.time()
-        result = self._dd_min(self.INTERNAL_SP, self.config, viz.newGraph()).wait().get()
-        i = 1
-        tot = []
-        while not result[1]:
-            res = result[0]
-            # On transmet
-            if log_function is not None:
-                log_function(res, i)
+    def wait(self):
+        print("lol")
+        if self._handler is None:
+            raise RuntimeError("Cannot wait for the job : no job is running")
+        print("lol")
+        self._handler.wait()
+    
+    def set_job(self, job: str | Job) -> None:
+        # If a string was passed, transforms it into a Job instance
+        if isinstance(job, str):
+            key = job.strip().lower()
+            for test_job in self._JOB_TO_CLASS:
+                if test_job.value == key:
+                    job_enum = test_job
+                    break
+            else:
+                valid = ", ".join(self.valid_jobs())
+                raise ValueError(f"Unknown Job : {job!r}. Valid job names are : {valid}.")
+        elif isinstance(job, Job):
+            job_enum = job
+        else:
+            raise TypeError("job must be a str or a Job.")
 
-            # Ajout au total + réduction du searchspace, puis on relance un dd_min
-            tot.extend(res)
-            all = sum(result[0], [])
-            self._reduce_search_space(all)
-            result = self._dd_min(self.INTERNAL_SP, self.config, viz.newGraph()).wait().get()
-            i += 1
-        if final_log_function is not None:
-            final_log_function(tot, i)
-        stop = time.time()
-        return tot, i, (stop - start)
-
-    #TODO: Make it run directly on PymoniK
-    def SRDDMIN(
-        self,
-        nbRunTab: list,
-        found,
-        config: BaseConfig,
-        viz: MultiViz = MultiViz(),
-    ):
-        # TODO: Preprocessing of nbRunTab
-
-        findback = {}
-        i = 0
-        tot = []
-        for run in nbRunTab:
-            findback[run] = i
-            i += 1
-        with Pymonik(endpoint=self._endpoint, environment=self._pymonik_environnement):
-            firstFail = False
-            for run in nbRunTab:
-                config.set_nb_run(run)
-                result = self._dd_min(self.INTERNAL_SP, config, viz.newGraph()).wait().get()
-                if result[1]:
-                    continue
-                while not result[1]:
-                    firstFail = True
-                    config.set_nb_run(run)
-                    done = False
-                    Args = [(res, 2, config) for res in result[0]]
-                    storeResult = nTask.map_invoke(Args).wait().get() #type: ignore
-
-                    # TODO: Quand l'implem de la disponibilité au plus tot sera prête faudra adapter
-                    while not done:
-                        ready = [i for i in range(len(storeResult))]
-                        notReady = AminusB([i for i in range(len(storeResult))], ready)
-                        nextArgs = []
-                        waiting = MultiResultHandle([storeResult[idx] for idx in notReady])
-                        didit = [storeResult[idx] for idx in ready]
-
-                        # préparation des configuration pour les tâches suivantes,
-                        for res in didit:
-                            where = findback[res[2].nbRun]
-                            if (
-                                where + 1 >= len(nbRunTab)
-                            ):  # Si on a déjà atteint le nombre de run max, on ajoute la sortie à tot et on réduit le search space
-                                tot.extend(res[0])
-                                all = sum(res[0], [])
-                                found(res[0])
-                                self._reduce_search_space(all)
-                                continue
-
-                            nextrun = nbRunTab[
-                                where + 1
-                            ]  # Sinon on trouve le nombre de run suivant et on prépare le lancement des tâches filles
-                            onesized = []
-                            for sub in res[0]:
-                                if len(sub) == 1:
-                                    onesized.append(sub)
-                                    continue
-                                newconf = copy(config)
-                                newconf.set_nb_run(nextrun)
-                                nextArgs.append((sub, 2, newconf))
-                            if onesized != []:
-                                tot.extend(onesized)
-                                all = sum(onesized, [])
-                                found(onesized)
-                                self._reduce_search_space(all)
-                        if nextArgs:
-                            if not waiting.result_handles:
-                                storeResult = nTask.map_invoke(nextArgs) #type: ignore
-                            else:
-                                waiting.extend(nTask.map_invoke(nextArgs)) #type: ignore
-                                storeResult = waiting
-                        else:
-                            if not waiting:
-                                done = True
-                                continue
-                        storeResult = storeResult.wait().get() #type: ignore
-                    result = self._dd_min(self.INTERNAL_SP, config, viz.newGraph()).wait().get()
-            if firstFail:
-                return tot
-            raise RuntimeError(
-                f"SRDDMin : testing the subset {nbRunTab[-1]} times has never returned false"
-            )
+        handler_class = self._JOB_TO_CLASS[job_enum]
+        self._handler = handler_class(self) 
+        self._status = Status(Phase.JOB_CREATED)
+    
         
     ### Attribute Manager
 
@@ -172,26 +218,72 @@ class Lockcell:
         return self._search_space  
     
     @property
-    def python_environnement(self) -> dict[str, Any]:
-        return self._pymonik_environnement
+    def environnement(self) -> dict[str, Any]:
+        return self._environnement
 
-    @config.setter
-    def config(self, config: BaseConfig) -> bool:
-        if self.is_running:
-            return False
-        self._config = copy(config)
-        self._search_space = self._config.generate_search_space()
-        return True
-    
+    @property
+    def is_open(self) -> bool:
+        return self._open
+
     @property
     def is_running(self) -> bool:
-        return self._running
+        return self._job_status == Phase.RUNNING
+    
+
+    @config.setter
+    def config(self, config: BaseConfig):
+        if self.is_open:
+            raise RuntimeError("Please close the current session before trying to change the configuration, use Lockcell.close() (then you can reopen it with Lockcell.open())")
+        self._config = copy(config)
+        self._search_space = self._config.generate_search_space()
+    
+    @environnement.setter
+    def environnement(self, environnement: dict[str, Any]):
+        if self.is_open:
+            raise RuntimeError("Please close the current session before trying to change the environnement, use Lockcell.close() (then you can reopen it with Lockcell.open())")
+        self._session.environment = environnement
+    
+    @endpoint.setter
+    def endpoint(self, endpoint: str | None):
+        if self.is_open:
+            raise RuntimeError("Please close the current session before trying to change the endpoint, use Lockcell.close() (then you can reopen it with Lockcell.open())")
+        self._session._endpoint = endpoint
+
+    @search_space.setter
+    def search_space(self, search_space : list):
+        if self.is_open:
+            raise RuntimeError("Please close the current session before trying to change the endpoint, use Lockcell.close() (then you can reopen it with Lockcell.open())")
+        self._search_space = search_space
         
-    ### Helpers
+    # Helpers
+
     def _reduce_search_space(self, to_subtract : list):
         self._search_space = AminusB(self._search_space, to_subtract)
     
-    def _is_ready(self, session : Pymonik, result : ResultHandle) -> bool:
-        armonik_result_pointer = session._results_client.get_result(result.result_id)
-        return armonik_result_pointer.status == 2
 
+    # To handle PymoniK session
+    
+    def open(self):
+        self._open = True
+        self._session.__enter__()
+
+    def close(self):
+        self._open = False
+        self._session.__exit__(None, None, None)
+
+    
+    # For usage with context : with
+
+    def __enter__(self):
+        self.open()
+        return self
+    
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+    
+    
+    # Class Methods
+    
+    @classmethod
+    def valid_jobs(cls) -> list[str]:
+        return [j.value for j in cls._JOB_TO_CLASS.keys()]

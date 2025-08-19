@@ -4,7 +4,6 @@ from pathlib import Path
 os.environ["LOCKCELL_CONFIG"] = str(Path(__file__).parent / "config.yaml")
 
 from lockcell import MultiViz, Lockcell, TestConfig
-import tools
 
 if __name__ == "__main__":
     PRINT_GRAPH = False
@@ -22,9 +21,12 @@ if __name__ == "__main__":
     searchspace = config.generate_search_space()
     print("[INFO] Searchspace generated")
 
-    # Launching RDDMin
-    lock = Lockcell(endpoint="172.29.94.180:5001", config=config, python_environnement={"pip": ["numpy"]})
-    res = lock.RDDMIN(tools.RDDMin_print, tools.final_print, Viz)
+    lock = Lockcell(endpoint="172.29.94.180:5001", config=config, environnement={"pip": ["numpy"]})
+    lock.open()
+    lock.run_ddmin()
+    lock.wait()
+
+    lock.close()
 
     # Potential graphprint
     if PRINT_GRAPH:

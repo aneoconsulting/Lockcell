@@ -4,11 +4,15 @@ import cloudpickle
 from .config import BaseConfig as BaseConfigModule
 from .config import TestConfig as TestConfigModule
 from .Tasks import utils
+from .Tasks import Results
+from .Tasks import Task
+from .Tasks import TaskMaster
+
 from . import VerrouConf
 
 # Modules to expose to the user
 from .graphViz import MultiViz
-from .controllers import Lockcell
+from .core import Lockcell
 from .VerrouConf import ConfigVerrou
 from .constants import USER_SCRIPTS_PATH, USER_WORKING_DIR, TASK_WORKING_DIR
 from .config.BaseConfig import BaseConfig
@@ -20,6 +24,9 @@ cloudpickle.register_pickle_by_value(BaseConfigModule)
 cloudpickle.register_pickle_by_value(utils)
 cloudpickle.register_pickle_by_value(TestConfigModule)
 cloudpickle.register_pickle_by_value(VerrouConf)
+cloudpickle.register_pickle_by_value(Results)
+cloudpickle.register_pickle_by_value(Task)
+cloudpickle.register_pickle_by_value(TaskMaster)
 
 # Exposing key classes/functions at package level
 __all__ = [
@@ -32,8 +39,6 @@ __all__ = [
     "USER_WORKING_DIR",
     "TASK_WORKING_DIR",
 ]
-
-del BaseConfigModule, TestConfigModule, utils, VerrouConf
 
 # Version
 __version__ = "0.7.0"

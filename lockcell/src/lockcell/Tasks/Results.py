@@ -22,5 +22,5 @@ class RDDMinResult:
         iteration_result : a pointer to the actual result in Armonik
         next : a pointer to the next iteration of RDDMin
     """
-    iteration_result: ResultHandle
-    next: ResultHandle
+    iteration_result: ResultHandle[TaskResult]
+    next: ResultHandle["RDDMinResult"] | None
