@@ -3,34 +3,31 @@ from pathlib import Path
 
 os.environ["LOCKCELL_CONFIG"] = str(Path(__file__).parent / "config.yaml")
 
+import cloudpickle
 import pytest
 import logging
 
-from lockcell import RDDMIN, TestConfig
-import tools
+from lockcell import Lockcell, TestConfig
 
 logger = logging.getLogger(__name__)
 
 
-def _assert_same_elems(res, expected):
+def _assert_same_elements(res, expected):
     assert {tuple(sorted(x)) for x in res} == {tuple(sorted(pb)) for pb, _ in expected}
 
 
-def _print_step_through_logger(result: list[list], iteration_number: int):
-    logger.info(tools.RDDMin_print(result, iteration_number))
+def _setup_lockcell():
+    import lockcell
 
-
-def _print_final_through_logger(result: list[list], iteration_number: int):
-    logger.info(tools.final_print(result, iteration_number))
+    cloudpickle.register_pickle_by_value(lockcell)
 
 
 @pytest.mark.parametrize(
-    "N, one_sized_failing_set, two_sized_failing_set, three_sized_failing_set, mode",
+    "N, one_sized_failing_set, two_sized_failing_set, three_sized_failing_set, mode_ddmin, lockcell_mode",
     [
-        (2**5, 2, 2, 1, "default"),
-        (2**6, 3, 2, 1, "default"),
-        (2**7, 3, 3, 2, "default"),
-        (2**7, 3, 3, 2, "Analyse"),
+        (2**5, 2, 2, 1, "default", "rddmin"),
+        (2**6, 3, 2, 1, "default", "rddmin"),
+        (2**7, 3, 3, 2, "Analyse", "rddmin"),
     ],
 )
 def test_random(
@@ -38,11 +35,13 @@ def test_random(
     one_sized_failing_set,
     two_sized_failing_set,
     three_sized_failing_set,
-    mode,
+    mode_ddmin,
+    lockcell_mode,
 ):
+    _setup_lockcell()
     ## For Mock Test
     config = TestConfig(N=N)
-    config.set_mode(mode)
+    config.set_mode(mode_ddmin)
 
     config.generate_problems(
         (one_sized_failing_set, 1, 0, 0),
@@ -51,24 +50,26 @@ def test_random(
         non_overlapping=True,
     )
 
-    searchspace = config.generate_search_space()
-    logger.debug(f"[INFO] Searchspace generated :\n {searchspace}")
+    search_space = config.generate_search_space()
+    logger.debug(f"[INFO] Searchspace generated :\n {search_space}")
 
-    # Launching RDDMin
-    res = RDDMIN(
-        searchspace=searchspace,
-        func=_print_step_through_logger,
-        finalfunc=_print_final_through_logger,
-        config=config,
-    )
-    print(res)
-    print(config.Pb)
-    _assert_same_elems(res[0], config.Pb)
+    with Lockcell(
+        endpoint="172.29.94.180:5001", config=config, environnement={"pip": ["numpy"]}
+    ) as lock:
+        lock.set_job(lockcell_mode)
+        lock.run()
+        lock.wait()
+        result = lock.get_result()
+
+        logger.info("Found result : " + str(result))
+        logger.info("Config result : " + str(config.Pb))
+    _assert_same_elements(result, config.Pb)
 
 
 @pytest.mark.slow
 def test_robust():
     ## For Mock Test
+    _setup_lockcell()
     # Specific problem set that makes the Analyser sweat lol
     config = TestConfig(
         N=2**7,
@@ -82,14 +83,13 @@ def test_robust():
     )
     config.set_mode("Analyse")
 
-    searchspace = config.generate_search_space()
-    logger.debug(f"[INFO] Searchspace generated :\n {searchspace}")
+    with Lockcell(
+        endpoint="172.29.94.180:5001", config=config, environnement={"pip": ["numpy"]}
+    ) as lock:
+        lock.run_rddmin()
+        lock.wait()
+        result = lock.get_result()
 
-    # Launching RDDMin
-    result = RDDMIN(
-        searchspace=searchspace,
-        func=_print_step_through_logger,
-        finalfunc=_print_final_through_logger,
-        config=config,
-    )
-    _assert_same_elems(result[0], config.Pb)
+        logger.info("Found result : " + str(result))
+        logger.info("Config result : " + str(config.Pb))
+    _assert_same_elements(result, config.Pb)
