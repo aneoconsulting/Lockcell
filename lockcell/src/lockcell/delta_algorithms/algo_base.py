@@ -1,9 +1,20 @@
-from abc import ABC, abstractmethod
-from typing import Any, TYPE_CHECKING
+from __future__ import annotations
 
+import time
+import warnings
+from abc import ABC, abstractmethod
+from typing import Any, TYPE_CHECKING, Type, TypeVar
+from grpc._channel import _MultiThreadedRendezvous
+
+
+from armonik.common import Task
 from pymonik import ResultHandle
 
+from ..Tasks.utils import TaskTag
+from ..constants import LOCKCELL_TAG
 from ..utils import StatusClass, Status
+from ..events import TasksFinder
+
 
 if TYPE_CHECKING:
     from ..core import Lockcell
@@ -19,7 +30,10 @@ class DeltaDebugHandler(ABC):
     def __init__(self, lock: "Lockcell"):
         self._lockcell = lock
         self._lockcell._job_status = StatusClass(Status.JOB_CREATED)
-        self._update_buffer: list[list] = []
+        self._result_buffer: list[list] = []
+
+        self._metadata_buffers: dict[TaskTag, list[Task]] = {}
+        self._tag_finder: dict[TaskTag, TasksFinder] = {}
 
     @abstractmethod
     def start(self):
@@ -27,6 +41,7 @@ class DeltaDebugHandler(ABC):
         launches the calculus
         """
 
+    @property
     def is_updated(self) -> bool:
         """
         Asserts if the calculus has updated since the last verification, or if it is completed
@@ -39,7 +54,7 @@ class DeltaDebugHandler(ABC):
     @abstractmethod
     def update(self) -> bool:
         """
-        Retrieve all the intermediate results that were created by the computation on ArmoniK and if there was some, updates the status to UPDATED (really important)
+        Retrieve all the intermediate results that were created by the computation on ArmoniK and if there was some, updates the status to UPDATED
 
         Returns:
             bool: True if it updated things (status can be UPDATED before the call, if nothing was found on that call, will return False)
@@ -53,7 +68,8 @@ class DeltaDebugHandler(ABC):
         Returns:
             list[list]: the updates
         """
-        if self.is_updated():
+        self._flush_metadata_buffers_into_result_buffer()
+        if self.is_updated:
             if not self.is_done:
                 self._update_status(Status.RUNNING)
             return self._clear_buffer()
@@ -87,21 +103,48 @@ class DeltaDebugHandler(ABC):
             list[list]: The result of the computation
         """
 
-    def _is_ready(self, result: ResultHandle) -> bool:
-        """
-        _is_ready Helper that check if a 'result' is ready
+    # Helpers
 
-        Args:
-            result (ResultHandle): The result to check
+    T = TypeVar("T")
 
-        Returns:
-            bool: True if the result is ready
-        """
-        armonik_result_pointer = self._lockcell._session._results_client.get_result(
-            result.result_id
+    def _get_task_result(self, task: Task, cast_type: Type[T] = object) -> T:
+        if not task.expected_output_ids:
+            raise ValueError("Tried to get the result of task that doesn't produce a result")
+        raw_result = self._get_result_handle(
+            ResultHandle(
+                task.expected_output_ids[0],
+                self._lockcell._session._session_id,
+                self._lockcell._session,
+            )
         )
-        # TODO: can check for failure or other status to implements in Status (check in armonik's python API (sth like) ~/.../client/.../result.py)
-        return armonik_result_pointer.status == 2
+        if not isinstance(raw_result, cast_type):
+            raise TypeError(f"Expected {cast_type}, got {type(raw_result)}")
+
+        return raw_result
+
+    MAX_TRY = 5
+
+    def _get_result_handle(self, to_get: ResultHandle, max_try=MAX_TRY):
+        raw_result = None
+        for counter in range(max_try):
+            try:
+                start = time.time()
+                raw_result = to_get.wait().get()
+                stop = time.time()
+                if counter != 0:
+                    warnings.warn(
+                        RuntimeWarning(
+                            f"Result retrieving failed {counter} times, duration of the retrieving phase {stop - start}s, it might be a wrong usage of the function"
+                        )
+                    )
+                break
+            except _MultiThreadedRendezvous as e:
+                if counter == max_try - 1:
+                    raise RuntimeError(f"Error while retrieving task result : {e}")
+                else:
+                    time.sleep(2)
+                    continue
+        return raw_result
 
     def _update_status(self, status: Status | StatusClass):
         """
@@ -114,14 +157,51 @@ class DeltaDebugHandler(ABC):
             status = StatusClass(status)
         self._lockcell._job_status.phase = status.phase
 
-    def _add_to_buffer(self, data: list[list]):
+    @abstractmethod
+    def _flush_metadata_buffers_into_result_buffer(self):
+        """
+        This method makes the link between the metadata buffer that only contains a pointer towards the result and the result buffer that actually contains the results
+
+        It should download the results pointed by the metadata (from every metadata buffer), put them in the result buffer and flush the metadata buffers (really important)s
+        """
+        pass
+
+    # Tag result helpers
+
+    def _link_tag(self, tag: TaskTag):
+        if tag not in self._tag_finder:
+            self._tag_finder[tag] = TasksFinder(
+                self._lockcell._session._endpoint,
+                self._lockcell._session._session_id,
+                Task.options[LOCKCELL_TAG] == tag.value,
+            )  # type: ignore
+            self._metadata_buffers[tag] = []  # initialize buffer for this tag
+
+    def _update_tag(self, tag: TaskTag):
+        if tag not in self._tag_finder:
+            raise ValueError(f"tag : {tag}, is not linked, cannot search for it")
+        news = self._tag_finder[tag].update()
+        if news:
+            self._update_status(Status.UPDATED)
+            self._add_metadata(tag, news)
+            return True
+        return False
+
+    def _add_metadata(self, tag: TaskTag, data: list[Task]):
+        if tag not in self._tag_finder:
+            raise ValueError(f"tag : {tag}, is not linked, cannot add metadata for it")
+        self._metadata_buffers[tag].extend(data)
+
+    # Result buffer helpers
+
+    def _add_result_to_buffer(self, data: list):
         """
         Add data to the buffer to resituate them during the 'get_update()' call, should be used in 'update()'
 
         Args:
             data (list[list]): The data to add
         """
-        self._update_buffer.extend(data)
+        self._result_buffer.append(data)
 
     def _clear_buffer(self):
         """
@@ -130,6 +210,6 @@ class DeltaDebugHandler(ABC):
         Returns:
             list[list]: The buffer before it was erased
         """
-        tmp = self._update_buffer
-        self._update_buffer = []
+        tmp = self._result_buffer
+        self._result_buffer = []
         return tmp

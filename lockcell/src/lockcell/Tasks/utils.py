@@ -1,4 +1,6 @@
-# List manipulers
+from enum import Enum
+
+from pymonik import task
 
 
 def split_list(tab: list, n: int):
@@ -45,3 +47,16 @@ def AminusB(A: list, B: list):
             c.append(delta)
 
     return c
+
+
+class TaskTag(Enum):
+    CLASSIC = "classic"
+    THROWN = "thrown"
+    ROOT = "root"
+    END_ROOT = "end_root"
+    RDDMIN_CHAIN = "rddmin_chain"
+
+
+@task
+def thrower(data: list[list]):
+    return data, False

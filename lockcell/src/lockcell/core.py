@@ -99,7 +99,7 @@ class Lockcell:
             raise RuntimeError("Cannot wait for the job : no job is running")
         self._handler.wait()
 
-    def _update(self) -> bool:
+    def update(self) -> bool:
         """
         Check for updates in calculus in Armonik
 
@@ -115,7 +115,7 @@ class Lockcell:
 
     def get_update(self) -> list[list]:
         """
-        Checks for updates, retrieves and returns them
+        Retrieve the update that were already found (to call after 'update()')
 
         Raises:
             RuntimeError: If there is no job running
@@ -125,17 +125,15 @@ class Lockcell:
         """
         if self._handler is None:
             raise RuntimeError("Cannot get the update of the job : no job is running")
-        self._update()
         return self._handler.get_update()
 
     def get_status(self):
         """
-        Check for updates on pymonik, updates the status, and returns it
+        Returns the actual status (no request done) (to call after 'update()')
 
         Returns:
             StatusClass : The status after updates
         """
-        self._update()
         return self._job_status
 
     def get_result(self):
@@ -152,7 +150,7 @@ class Lockcell:
         if self._handler is None:
             raise RuntimeError("Cannot retrieve a result from a job if there is not job")
         if not self._handler.is_done:
-            self._update()
+            self.update()
             if not self._handler.is_done:
                 raise RuntimeError("Tried to retrieve the result when is wasn't ready")
         return self._handler.get_result()
