@@ -23,8 +23,12 @@ if TYPE_CHECKING:
 # Interface for a way to execute Delta Debug (like DDMin, RDDMin, SRDDMin, ...)
 class DeltaDebugHandler(ABC):
     """
-    Handles the process of a way to perform DDMin (like DDMin, RDDMin, SRDDMin)
-    Is an Interface, not implementable, must be seen as a part of lockcell, it will interact with it's attributes (especially '_job_status')
+    Base class and interface for Delta Debugging algorithms in Lockcell.
+
+    This abstract class provides the interface and helper methods for implementing
+    delta debugging algorithms (such as DDMin, RDDMin, SRDDMin, etc.) in the Lockcell framework. It manages job status,
+    result and metadata buffers, and provides methods for linking and updating task tags, as well as retrieving results.
+    Is an interface, not implementable directly, and should be used as a base for concrete delta debugging handlers.
     """
 
     def __init__(self, lock: "Lockcell"):

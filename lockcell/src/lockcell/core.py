@@ -16,6 +16,13 @@ class Job(Enum):
 
 
 class Lockcell:
+    """
+    Main interface for running Delta Debugging algorithms (DDMin, RDDMin) in the Lockcell framework.
+
+    This class manages configuration, session, job status, and provides methods to run, update, and retrieve results
+    for delta debugging jobs. It acts as a user-facing API for orchestrating and monitoring the debugging process.
+    """
+
     # Register that makes the correspondence between the jobs and the names
     _JOB_TO_CLASS: dict[Job, type[DeltaDebugHandler]] = {}
 

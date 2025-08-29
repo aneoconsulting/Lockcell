@@ -16,6 +16,17 @@ if TYPE_CHECKING:
 
 
 class DDMin(DeltaDebugHandler):
+    """
+    Delta Debugging Minimization (DDMin) algorithm implementation for Lockcell.
+
+    Delta Debugging Minimization is a handler for delta debugging tasks in the Lockcell framework.
+    It manages the execution, update, and result collection for delta debugging jobs, using task tags and result buffers.
+
+    Args:
+        lock (Lockcell): The Lockcell instance to operate on.
+        graph_root (Node | None): Optional root node for the graph.
+    """
+
     def __init__(self, lock: "Lockcell", graph_root: Node | None = None):
         super().__init__(lock)
         self._expected_result: ResultHandle[TaskResult] | None = None
@@ -25,7 +36,11 @@ class DDMin(DeltaDebugHandler):
         self._link_tag(TaskTag.END_ROOT)
 
     def start(self):
+        """
+        Start the DDMin process by invoking the root task and updating the status.
+        """
         options = self._lockcell._session.task_options
+        options.options = options.options.copy()
         options.options[LOCKCELL_TAG] = TaskTag.ROOT.value
 
         self._expected_result = nTask.invoke(  # type: ignore
@@ -39,6 +54,16 @@ class DDMin(DeltaDebugHandler):
         self._update_status(Status.RUNNING)
 
     def update(self) -> bool:
+        """
+        Check for linked tags, retrieve associated tasks and put their metadata in the different buffers
+        Also updates the status
+
+        Raises:
+            RuntimeError: If the computation is not started
+
+        Returns:
+            bool: _description_
+        """
         if self.is_done:
             return False
         if not self._expected_result:
@@ -55,6 +80,15 @@ class DDMin(DeltaDebugHandler):
         return test
 
     def wait(self):
+        """
+        Wait for the expected result to complete, updating the status accordingly.
+        Raises:
+            RuntimeError: If the job status is not running or done.
+            AttributeError: If no expected result exists.
+        Returns:
+            self
+        """
+        # TODO: rewrite it using Armonik Event python API
         if not (is_running(self._lockcell._job_status) or self.is_done):
             raise RuntimeError(
                 f"Tried to wait for a result with {self._lockcell._job_status} status"
@@ -66,6 +100,9 @@ class DDMin(DeltaDebugHandler):
         return self
 
     def _flush_metadata_buffers_into_result_buffer(self):
+        """
+        Retrieve the result associated to metadata from the tag buffers and put them into the main result buffer, avoiding duplicates.
+        """
         for thrown in self._metadata_buffers[TaskTag.THROWN]:
             thrown_result: list = self._get_task_result(thrown, list)
             if not _already_contains(self._result, thrown_result):
@@ -86,6 +123,13 @@ class DDMin(DeltaDebugHandler):
         self._metadata_buffers[TaskTag.END_ROOT] = []
 
     def get_result(self) -> list[list]:
+        """
+        Get the result of the DDMin process.
+        Raises:
+            RuntimeError: If the result is not ready.
+        Returns:
+            list[list]: The minimized failing subsets.
+        """
         if not self.is_done:
             raise RuntimeError(
                 "get_result can only be used when the result is ready (use the DeltaDebugHandler.done property to verify it)"
@@ -94,7 +138,16 @@ class DDMin(DeltaDebugHandler):
 
 
 def _already_contains(all: list[list], item: list):
+    """
+    Checks if 'item' is already present in 'all', comparing as sets.
+    Args:
+        all (list[list]): The list of lists to check in.
+        item (list): The item to check for.
+    Returns:
+        bool: True if item is present, False otherwise.
+    """
+    item_set = set(item)
     for x in all:
-        if set(x) == set(item):
+        if set(x) == item_set:
             return True
     return False

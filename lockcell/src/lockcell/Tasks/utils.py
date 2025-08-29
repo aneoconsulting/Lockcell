@@ -59,4 +59,13 @@ class TaskTag(Enum):
 
 @task
 def thrower(data: list[list]):
+    """
+    Does nothing except throwing a result, used with task_option to tag this task a retrieve it from the client
+
+    Args:
+        data (list[list]): The result
+
+    Returns:
+        tuple[list[list], bool]: The result
+    """
     return data, False

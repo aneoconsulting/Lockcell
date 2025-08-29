@@ -10,7 +10,18 @@ if TYPE_CHECKING:
 
 
 class RDDMin(DeltaDebugHandler):
+    """
+    Handler for the Recursive Delta Debugging Minimization (RDDMin) algorithm in Lockcell.
+
+    This class manages the execution, update, and result collection for recursive delta debugging jobs.
+    It tracks the job status, manages results per iteration, and provides methods to start, update, and retrieve results.
+    """
+
     def __init__(self, lock: "Lockcell"):
+        """
+        Initialize the RDDMin handler with the given Lockcell instance.
+        Sets up job status, result buffers, and links required task tags.
+        """
         super().__init__(lock)
         self._lockcell._job_status = RDDMinStatus(Status.JOB_CREATED, step=0)
         self._last_known_iteration: RDDMinResult | None = None
@@ -20,6 +31,9 @@ class RDDMin(DeltaDebugHandler):
         self._link_tag(TaskTag.RDDMIN_CHAIN)
 
     def start(self):
+        """
+        Start the RDDMin process by invoking the initial RDDMin task and updating the status.
+        """
         self._last_known_iteration = unfake_result(
             running_rddmin_task.invoke(  # type: ignore
                 self._lockcell._search_space,
@@ -34,6 +48,12 @@ class RDDMin(DeltaDebugHandler):
         self._new_step()
 
     def update(self) -> bool:
+        """
+        Update the RDDMin process by checking for new results from linked tags.
+        Returns True if any updates were found, otherwise False.
+        Raises:
+            RuntimeError: If the process has not been started.
+        """
         if self.is_done:
             return False
         if not self._last_known_iteration:
@@ -50,6 +70,14 @@ class RDDMin(DeltaDebugHandler):
         return test
 
     def wait(self):
+        """
+        Wait for the RDDMin process to complete, iterating through all steps and updating results.
+        Raises:
+            RuntimeError: If the job status is invalid.
+            AttributeError: If no result exists to wait for.
+        Returns:
+            self
+        """
         if not (is_running(self._lockcell._job_status) or self.is_done):
             raise RuntimeError(
                 f"Tried to wait for a result with {self._lockcell._job_status} status"
@@ -83,6 +111,10 @@ class RDDMin(DeltaDebugHandler):
         return self
 
     def _flush_metadata_buffers_into_result_buffer(self):
+        """
+        Move metadata from the tag buffers into the main result buffer, avoiding duplicates.
+        Handles both THROWN and RDDMIN_CHAIN tags.
+        """
         for thrown in self._metadata_buffers[TaskTag.THROWN]:
             thrown_result: list = self._get_task_result(thrown, tuple)[0][0]
             if not _already_contains(self._final_result, thrown_result):
@@ -96,6 +128,13 @@ class RDDMin(DeltaDebugHandler):
         self._metadata_buffers[TaskTag.RDDMIN_CHAIN] = []
 
     def get_result(self) -> list[list]:
+        """
+        Get the final result of the RDDMin process.
+        Raises:
+            RuntimeError: If the result is not ready.
+        Returns:
+            list[list]: The minimized failing subsets.
+        """
         if not self.is_done:
             raise RuntimeError(
                 "get_result can only be used when the result is ready (use the DeltaDebugHandler.done property to verify it)"
@@ -103,6 +142,13 @@ class RDDMin(DeltaDebugHandler):
         return self._final_result
 
     def _next_iteration(self):
+        """
+        Advance to the next iteration in the RDDMin process, updating results and status.
+        Raises:
+            AttributeError: If no current iteration exists.
+            RuntimeError: If there is an error retrieving the last iteration.
+            SystemError: If the next iteration is missing when expected.
+        """
         if self._last_known_iteration is None:
             raise AttributeError("Cannot retrieve the next_iteration of a non existing result")
 
@@ -131,10 +177,21 @@ class RDDMin(DeltaDebugHandler):
         print("Summary : ", self._result_per_iteration[-1].__str__()[1:-1])
 
     def _new_step(self):
+        """
+        Increment the step counter in the job status.
+        """
         self._lockcell._job_status.step += 1  # type: ignore
 
 
 def _already_contains(all: list[list], item: list):
+    """
+    Check if 'item' is already present in 'all', comparing as sets.
+    Args:
+        all (list[list]): The list of lists to check in.
+        item (list): The item to check for.
+    Returns:
+        bool: True if item is present, False otherwise.
+    """
     for x in all:
         if set(x) == set(item):
             return True
