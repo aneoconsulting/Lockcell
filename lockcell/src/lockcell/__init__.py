@@ -1,12 +1,14 @@
 import cloudpickle
 
 # Modules to pass to the tasks
+
 from .config import BaseConfig as BaseConfigModule
 from .config import TestConfig as TestConfigModule
 from .Tasks import utils
 from .Tasks import Results
 from .Tasks import Task
 from .Tasks import TaskMaster
+from .constants import LOCKCELL_TAG
 
 from . import VerrouConf
 
@@ -29,6 +31,7 @@ cloudpickle.register_pickle_by_value(Results)
 cloudpickle.register_pickle_by_value(Task)
 cloudpickle.register_pickle_by_value(TaskMaster)
 
+
 # Exposing key classes/functions at package level
 __all__ = [
     "MultiViz",
@@ -40,6 +43,7 @@ __all__ = [
     "USER_WORKING_DIR",
     "TASK_WORKING_DIR",
     "Status",
+    "LOCKCELL_TAG",
 ]
 
 # Version

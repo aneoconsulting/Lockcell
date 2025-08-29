@@ -9,6 +9,8 @@ import os
 import yaml
 from pathlib import Path
 
+LOCKCELL_TAG = "lockcelltag"
+
 # Load configuration file path from environment variable
 env_config_path = os.getenv("LOCKCELL_CONFIG")
 

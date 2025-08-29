@@ -24,9 +24,9 @@ class StatusClass:
     phase: Status
 
     def __eq__(self, other):
-        print(other)
         if isinstance(other, Status):
             return self.phase is other
+
         if isinstance(other, StatusClass):
             return self.phase is other.phase
         return NotImplemented
@@ -52,7 +52,7 @@ class RDDMinStatus(StatusClass):
 
     def __str__(self):
         if self.phase is Status.RUNNING or self.phase is Status.UPDATED:
-            return f"{self.phase.name} (step {self.step})"
+            return f"{self.phase.name} (iteration : {self.step})"
         return str(self.phase.name)
 
     def __eq__(self, other):

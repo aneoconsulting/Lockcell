@@ -7,11 +7,12 @@ name = "lockcell"
 version = "0.7.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
+    "armonik>=3.26.1",
     "graphviz>=0.21",
     "numpy>=2.2.6",
-    "pymonik==0.2.3",
+    "pymonik==0.2.5",
 ]
 
 [tool.hatch.build.targets.wheel]

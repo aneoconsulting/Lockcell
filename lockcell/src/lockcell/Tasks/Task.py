@@ -5,18 +5,35 @@ Email    : erwan.tchale@gmail.com
 
 """
 
-from pymonik import task, MultiResultHandle
+from datetime import timedelta
+
+from armonik.worker import TaskHandler
+from pymonik import task, MultiResultHandle, TaskOptions
 
 from typing import List, Tuple, Optional, Union
 from ..config.BaseConfig import BaseConfig
-from .utils import AminusB, split_list
+from .utils import AminusB, split_list, thrower, TaskTag
+from ..constants import LOCKCELL_TAG
 
 
 ### NTask
 
+BASE_PRIORITY = 1
 
-@task
+
+@task(
+    priority=BASE_PRIORITY,
+    require_context=True,
+    task_options=TaskOptions(
+        max_duration=timedelta(300),
+        priority=BASE_PRIORITY,
+        max_retries=3,
+        partition_id="pymonik",
+        options={LOCKCELL_TAG: TaskTag.CLASSIC.value},
+    ),
+)
 def nTask(
+    ctx,
     delta: list,
     n: Union[int, List[list]],
     config: BaseConfig,
@@ -54,6 +71,8 @@ def nTask(
     This task may delegate to a nAGG task, which returns a result in the same format.
 
     """
+    handler: TaskHandler = ctx.task_handler
+    options = handler.task_options
 
     ### PrintGraph ###
     gPrint = me is not None
@@ -87,7 +106,21 @@ def nTask(
         ### PrintGraph ###
         if gPrint:
             me.sout(me, [[delta], False])
-        return [delta], False
+        tag = TaskTag.THROWN.value
+        if LOCKCELL_TAG in options.options:
+            if options.options[LOCKCELL_TAG] == TaskTag.ROOT.value:
+                tag = TaskTag.THROWN.value
+        return thrower.invoke(
+            [delta],
+            delegate=True,
+            task_options=TaskOptions(
+                max_duration=timedelta(300),
+                priority=7,
+                max_retries=3,
+                partition_id="pymonik",
+                options={LOCKCELL_TAG: tag},
+            ),
+        )
 
     # Sinon on split en n (= granularity)
     if isinstance(n, int):
@@ -121,7 +154,9 @@ def nTask(
     if isinstance(n, list):
         n = len(n)
 
-    return nAGG.invoke(subdiv, result, n, config, GrOut, oneSub, delegate=True)  # type: ignore
+    return nAGG.invoke(
+        subdiv, result, n, config, GrOut, oneSub, delegate=True, task_options=options
+    )  # type: ignore
 
 
 #########################################################################################################
@@ -129,8 +164,19 @@ def nTask(
 #########################################################################################################
 
 
-@task
+@task(
+    priority=BASE_PRIORITY,
+    require_context=True,
+    task_options=TaskOptions(
+        max_duration=timedelta(300),
+        priority=BASE_PRIORITY,
+        max_retries=3,
+        partition_id="pymonik",
+        options={LOCKCELL_TAG: TaskTag.CLASSIC.value},
+    ),
+)
 def nAGG(
+    ctx,
     subdiv: List[list],
     answers: List[Tuple[List[list] | None, bool]],
     n: int,
@@ -164,6 +210,9 @@ def nAGG(
         This task may delegate to a `nAGG2` or a `nAnalyser`, or return directly, following the same format.
 
     """
+
+    handler: TaskHandler = ctx.task_handler
+    options = handler.task_options
 
     ### PrintGraph ###
     gPrint = me is not None
@@ -207,7 +256,21 @@ def nAGG(
             ### PrintGraph ###
             if gPrint:
                 me.sout(me, [[omega], False])
-            return [omega], False
+            tag = TaskTag.THROWN.value
+            if LOCKCELL_TAG in options.options:
+                if options.options[LOCKCELL_TAG] == TaskTag.ROOT.value:
+                    tag = TaskTag.THROWN.value
+            return thrower.invoke(
+                [omega],
+                delegate=True,
+                task_options=TaskOptions(
+                    max_duration=timedelta(300),
+                    priority=7,
+                    max_retries=3,
+                    partition_id="pymonik",
+                    options={LOCKCELL_TAG: tag},
+                ),
+            )
 
         newdivision = []  # Pour le 2nAGG
         newdivisionArg = []  # Pour les nTask
@@ -236,7 +299,9 @@ def nAGG(
                 GrOut.sup(*i[3].out)
             me.sout(GrOut, None)
 
-        return nAGG.invoke(newdivision, result, k, config, GrOut, delegate=True)  # type: ignore
+        return nAGG.invoke(
+            newdivision, result, k, config, GrOut, delegate=True, task_options=options
+        )  # type: ignore
 
     next = nAGG2
     recursion = True
@@ -272,7 +337,9 @@ def nAGG(
             GrOut.sup(*i[3].out)
         me.sout(GrOut, None)
 
-    return next.invoke(subdiv, result, n, config, GrOut, oneSub, delegate=True)  # type: ignore
+    return next.invoke(
+        subdiv, result, n, config, GrOut, oneSub, delegate=True, task_options=options
+    )  # type: ignore
 
 
 #########################################################################################################
@@ -280,8 +347,19 @@ def nAGG(
 #########################################################################################################
 
 
-@task
+@task(
+    priority=BASE_PRIORITY,
+    require_context=True,
+    task_options=TaskOptions(
+        max_duration=timedelta(300),
+        priority=BASE_PRIORITY,
+        max_retries=3,
+        partition_id="pymonik",
+        options={LOCKCELL_TAG: TaskTag.CLASSIC.value},
+    ),
+)
 def nAGG2(
+    ctx,
     subdiv: List[list],
     answers: List[Tuple[List[list] | None, bool]],
     n: int,
@@ -316,6 +394,9 @@ def nAGG2(
 
         This task may delegate to a `nAGG`, or return directly, following the same result structure.
     """
+    handler: TaskHandler = ctx.task_handler
+    options = handler.task_options
+
     ### PrintGraph ###
     gPrint = me is not None
     if gPrint:
@@ -357,7 +438,21 @@ def nAGG2(
         ### PrintGraph ###
         if gPrint:
             me.sout(me, [[omega], False])
-        return [omega], False
+        tag = TaskTag.THROWN.value
+        if LOCKCELL_TAG in options.options:
+            if options.options[LOCKCELL_TAG] == TaskTag.ROOT.value:
+                tag = TaskTag.THROWN.value
+        return thrower.invoke(
+            [omega],
+            delegate=True,
+            task_options=TaskOptions(
+                max_duration=timedelta(300),
+                priority=7,
+                max_retries=3,
+                partition_id="pymonik",
+                options={LOCKCELL_TAG: tag},
+            ),
+        )
 
     newdivision = []  # Pour le 2nAGG
     newdivisionArg = []  # Pour les nTask
@@ -384,7 +479,7 @@ def nAGG2(
             GrOut.sup(*i[3].out)
         me.sout(GrOut, None)
 
-    return nAGG.invoke(newdivision, result, k, config, GrOut, delegate=True)  # type: ignore
+    return nAGG.invoke(newdivision, result, k, config, GrOut, delegate=True, task_options=options)  # type: ignore
 
 
 #########################################################################################################
@@ -392,8 +487,19 @@ def nAGG2(
 #########################################################################################################
 
 
-@task
+@task(
+    priority=BASE_PRIORITY,
+    require_context=True,
+    task_options=TaskOptions(
+        max_duration=timedelta(300),
+        priority=BASE_PRIORITY,
+        max_retries=3,
+        partition_id="pymonik",
+        options={LOCKCELL_TAG: TaskTag.CLASSIC.value},
+    ),
+)
 def nAnalyser(
+    ctx,
     subdiv: List[list],
     answers: List[Tuple[List[list] | None, bool]],
     n: int,
@@ -430,6 +536,8 @@ def nAnalyser(
 
         This task may delegate to a `nAGG` or a `nAnalyserDown`, or return directly, using the same result structure.
     """
+    handler: TaskHandler = ctx.task_handler
+    options = handler.task_options
 
     ### PrintGraph ###
     gPrint = me is not None
@@ -459,7 +567,21 @@ def nAnalyser(
                 me.addLabel("One fail")
                 me.addLabel("Granularity Max !")
                 me.sout(me, [rep, False])
-            return rep, False
+            tag = TaskTag.THROWN.value
+            if LOCKCELL_TAG in options.options:
+                if options.options[LOCKCELL_TAG] == TaskTag.ROOT.value:
+                    tag = TaskTag.THROWN.value
+            return thrower.invoke(
+                rep,
+                delegate=True,
+                task_options=TaskOptions(
+                    max_duration=timedelta(300),
+                    priority=7,
+                    max_retries=3,
+                    partition_id="pymonik",
+                    options={LOCKCELL_TAG: tag},
+                ),
+            )
 
         if len(idxs) == 1:  # Si un seul fail on recurse dessus
             # On prépare les arguments
@@ -490,7 +612,15 @@ def nAnalyser(
                     newdivision.append(temp[1])
                     idx_ += 2
             return nTask.invoke(
-                nabla, newdivision, config, GrOut, True, False, oneSub, delegate=True
+                nabla,
+                newdivision,
+                config,
+                GrOut,
+                True,
+                False,
+                oneSub,
+                delegate=True,
+                task_options=options,
             )
 
         Achanger = True  # TODO: Activation de l'analyse ou pas à retirer
@@ -567,7 +697,7 @@ def nAnalyser(
                 me.sout(GrOut, None)
 
             return nAnalyserDown.invoke(
-                subdiv, Nanswers, conjugate, n, config, GrOut, delegate=True
+                subdiv, Nanswers, conjugate, n, config, GrOut, delegate=True, task_options=options
             )
 
         else:  # Pas de traitement
@@ -603,7 +733,9 @@ def nAnalyser(
                     GrOut.sup(*arg[3].out)
                 me.sout(GrOut, None)
 
-            return nAGG2.invoke(subdiv, answers, len(idxs), config, GrOut, delegate=True)  # type: ignore
+            return nAGG2.invoke(
+                subdiv, answers, len(idxs), config, GrOut, delegate=True, task_options=options
+            )  # type: ignore
 
     # Sinon on augmente la granularité
 
@@ -612,7 +744,21 @@ def nAnalyser(
         if gPrint:
             me.addLabel("Granularity Max !")
             me.sout(me, [[omega], False])
-        return [omega], False
+        tag = TaskTag.THROWN.value
+        if LOCKCELL_TAG in options.options:
+            if options.options[LOCKCELL_TAG] == TaskTag.ROOT.value:
+                tag = TaskTag.THROWN.value
+        return thrower.invoke(
+            [omega],
+            delegate=True,
+            task_options=TaskOptions(
+                max_duration=timedelta(300),
+                priority=7,
+                max_retries=3,
+                partition_id="pymonik",
+                options={LOCKCELL_TAG: tag},
+            ),
+        )
 
     ### PrintGraph ###
     if gPrint:
@@ -648,7 +794,9 @@ def nAnalyser(
             GrOut.sup(*i[3].out)
         me.sout(GrOut, None)
 
-    return nAGG.invoke(newdivision, result, k, config, GrOut, oneSub, delegate=True)  # type: ignore
+    return nAGG.invoke(
+        newdivision, result, k, config, GrOut, oneSub, delegate=True, task_options=options
+    )  # type: ignore
 
 
 #########################################################################################################
@@ -656,8 +804,19 @@ def nAnalyser(
 #########################################################################################################
 
 
-@task
+@task(
+    priority=BASE_PRIORITY,
+    require_context=True,
+    task_options=TaskOptions(
+        max_duration=timedelta(300),
+        priority=BASE_PRIORITY,
+        max_retries=3,
+        partition_id="pymonik",
+        options={LOCKCELL_TAG: TaskTag.CLASSIC.value},
+    ),
+)
 def nAnalyserDown(
+    ctx,
     subdiv: List[list],
     answers: List[Tuple[List[list] | None, bool]],
     conj: List[Optional[int]],
@@ -696,6 +855,8 @@ def nAnalyserDown(
 
         This task may delegate to a `Corrector` or a `nAGG`, or return directly, using the same result structure.
     """
+    handler: TaskHandler = ctx.task_handler
+    options = handler.task_options
 
     ### PrintGraph ###
     gPrint = me is not None
@@ -833,7 +994,19 @@ def nAnalyserDown(
                 newdivision.append(temp[1])
                 idx_ += 2
         res = MultiResultHandle(
-            [nTask.invoke(newDelta, newdivision, config, Gr1, True, None, oneSub, delegate=True)]
+            [
+                nTask.invoke(
+                    newDelta,
+                    newdivision,
+                    config,
+                    Gr1,
+                    True,
+                    None,
+                    oneSub,
+                    delegate=True,
+                    task_options=options,
+                )
+            ]
         )
 
         GrOut = None
@@ -849,7 +1022,9 @@ def nAnalyserDown(
             GrOut.sup(*out.out)
             me.sout(GrOut, None)
 
-        return Corrector.invoke(1, subdiv, res, matrix, n, config, GrOut, delegate=True)
+        return Corrector.invoke(
+            1, subdiv, res, matrix, n, config, GrOut, delegate=True, task_options=options
+        )
 
     ### If there is two failing subsets (deg = 2) ####################################################################
     test, idx1, idx2 = two(extractMatrix(matrix, lst, lst), nb)
@@ -930,7 +1105,9 @@ def nAnalyserDown(
             GrOut.sup(*out.out)
             me.sout(GrOut, None)
 
-        return Corrector.invoke(2, subdiv, res, matrix, n, config, GrOut, delegate=True)
+        return Corrector.invoke(
+            2, subdiv, res, matrix, n, config, GrOut, delegate=True, task_options=options
+        )
 
     ### Sinon on simule une execution classique ######################################################################
     else:
@@ -1009,7 +1186,7 @@ def nAnalyserDown(
                 GrOut.sup(*out.out)
             me.sout(GrOut, None)
         results = MultiResultHandle(results)
-        return nAGG.invoke(subdiv, results, n, config, GrOut)
+        return nAGG.invoke(subdiv, results, n, config, GrOut, delegate=True, task_options=options)
 
 
 #########################################################################################################
@@ -1017,7 +1194,16 @@ def nAnalyserDown(
 #########################################################################################################
 
 
-@task
+@task(
+    priority=BASE_PRIORITY,
+    task_options=TaskOptions(
+        max_duration=timedelta(300),
+        priority=BASE_PRIORITY,
+        max_retries=3,
+        partition_id="pymonik",
+        options={LOCKCELL_TAG: TaskTag.CLASSIC.value},
+    ),
+)
 def Corrector(
     mode: int,
     subdiv: List[list],

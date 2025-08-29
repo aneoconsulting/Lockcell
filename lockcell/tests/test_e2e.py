@@ -3,11 +3,12 @@ from pathlib import Path
 
 os.environ["LOCKCELL_CONFIG"] = str(Path(__file__).parent / "config.yaml")
 
+import time
 import cloudpickle
 import pytest
 import logging
 
-from lockcell import Lockcell, TestConfig
+from lockcell import Lockcell, TestConfig, Status
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +57,17 @@ def test_random(
     with Lockcell(
         endpoint="172.29.94.180:5001", config=config, environnement={"pip": ["numpy"]}
     ) as lock:
-        lock.set_job(lockcell_mode)
-        lock.run()
-        lock.wait()
+        lock.run_rddmin()
+        logger.info("Started")
+        start = time.time()
+        status = lock.get_status()
+        while status != Status.COMPLETED:
+            if status == Status.UPDATED:
+                logger.info(f"\nUpdate at {(time.time() - start):.2f}s ---> {lock.get_update()}")
+            lock.update()
+            status = lock.get_status()
+            time.sleep(0.5)
         result = lock.get_result()
-
         logger.info("Found result : " + str(result))
         logger.info("Config result : " + str(config.Pb))
     _assert_same_elements(result, config.Pb)
@@ -87,9 +94,16 @@ def test_robust():
         endpoint="172.29.94.180:5001", config=config, environnement={"pip": ["numpy"]}
     ) as lock:
         lock.run_rddmin()
-        lock.wait()
+        logger.info("Started")
+        start = time.time()
+        status = lock.get_status()
+        while status != Status.COMPLETED:
+            if status == Status.UPDATED:
+                logger.info(f"\nUpdate at {(time.time() - start):.2f}s ---> {lock.get_update()}")
+            lock.update()
+            status = lock.get_status()
+            time.sleep(0.5)
         result = lock.get_result()
-
         logger.info("Found result : " + str(result))
         logger.info("Config result : " + str(config.Pb))
     _assert_same_elements(result, config.Pb)
