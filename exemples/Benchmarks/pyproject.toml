@@ -1,0 +1,20 @@
+[project]
+name = "testverrou"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.11.13"
+dependencies = [
+    "lockcell",
+    "matplotlib>=3.10.5",
+    "pyproject-toml>=0.1.0",
+    "pytest>=8.4.1",
+]
+
+[dependency-groups]
+dev = [
+    "lockcell",
+]
+
+[tool.uv.sources]
+lockcell = { path = "../../lockcell", editable = true }
