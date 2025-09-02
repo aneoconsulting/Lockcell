@@ -1,0 +1,113 @@
+/* Style commun à tous les blocs */
+.definition, .remarque, .propriete, .proposition, .convention, .demo {
+  border-radius: 8px;
+  margin: 1.2em 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  font-family: sans-serif;
+}
+/* 🔧 Définition (bleu) */
+.definition-title { 
+  background: #0d47a1; /* bleu foncé */
+  color: white; 
+  font-weight: bold; 
+  padding: 0.5em 1em;
+}
+.definition-body  { 
+  background: #1976d2; /* bleu plus clair */
+  color: rgb(0, 0, 0);        /* texte blanc pour contraste */
+  padding: 1em 1.2em; 
+}
+
+/* 🔧 Remarque (vert) */
+.remarque-title { 
+  background: #1b5e20; 
+  color: white; 
+  font-weight: bold; 
+  padding: 0.5em 1em;
+}
+.remarque-body  { 
+  background: #43a047; 
+  color: rgb(0, 0, 0); 
+  padding: 1em 1.2em; 
+}
+
+/* 🔧 Propriété (orange) */
+.propriete-title { 
+  background: #f35907; 
+  color: white; 
+  font-weight: bold; 
+  padding: 0.5em 1em;
+}
+.propriete-body  { 
+  background: #fb8c00; 
+  color: black; /* fond clair -> texte noir */
+  padding: 1em 1.2em; 
+}
+
+/* 🔧 Proposition (rouge) */
+.proposition-title { 
+  background: #ec3131; 
+  color: rgb(0, 0, 0); 
+  font-weight: bold; 
+  padding: 0.5em 1em;
+}
+.proposition-body  { 
+  background: #ff6865; 
+  color: rgb(0, 0, 0); 
+  padding: 1em 1.2em; 
+}
+
+/* 🔧 Démo (gris neutre) */
+.demo-title { 
+  background: #005a05; 
+  color: rgb(0, 0, 0); 
+  font-weight: bold; 
+  padding: 0.5em 1em;
+}
+.demo-body  { 
+  background: #61d35d; 
+  color: rgb(0, 0, 0); 
+  padding: 1em 1.2em; 
+}
+
+
+/* 🔧 Convention (violet) */
+.convention-title { 
+  background: #6b20c7; /* Violet foncé */
+  color: white;
+  font-weight: bold;
+  padding: 0.5em 1em;
+}
+.convention-body {
+  background: #c14de0; /* Violet plus clair */
+  color: rgb(0, 0, 0);
+  padding: 1em 1.2em;
+}
+
+
+/* Supprimer le style gris natif des blockquotes */
+blockquote {
+  background: none !important;
+  border-left: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.demo-body details {
+  margin-top: 0.5em;
+}
+
+.demo-body summary {
+  cursor: pointer;
+  font-weight: bold;
+  list-style: none; /* supprime la puce par défaut */
+}
+
+.demo-body summary::marker {
+  content: "▶ "; /* petite flèche personnalisée */
+}
+
+.demo-body[open] summary::marker {
+  content: "▼ "; /* flèche vers le bas quand ouvert */
+}
