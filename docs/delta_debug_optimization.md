@@ -8,7 +8,7 @@ _Auteur(s), Date_
 
 ---
 
-## I. Introduction
+# I. Introduction
 
 Présente le contexte, le problème étudié et l'objectif de l'article.
 
@@ -23,9 +23,9 @@ $$
 
 ---
 
-## II. Définitions et Propriétés
+# II. Définitions et Propriétés
 
-### 1. Mathématisation du problème
+## 1. Mathématisation du problème
 
 Dans cette première partie nous introduisons les premiers concepts fondamentaux à la compréhension du problème et à sa mathématisation, nous essayerons de toujours nous appuyer sur l'exemple des lignes d'un code de simulation afin de donner une idée du sens des définissions au lecteur.
 
@@ -139,7 +139,7 @@ En effet, imaginons un ensemble simple {1, 2, 3} et $b_1 = \{1, 2\}$, $ b_2 = \{
 
 > ***Remarque :*** On a bien $B_{|F}$ non vide, en effet d'après l'équivalence atomique comme $T(F) = ✗$ on a bien $b\in B$ tel que $b \subseteq F$
 
-### 2. Introduction des outils
+## 2. Introduction des outils
 
 Maintenant que nous avons pu poser précisemment ce qu'est un problème, nous allons introduire les outils qui nous permettrons de trouver ses atomes.
 
@@ -212,7 +212,7 @@ Enfin nous introduisons la notion de conjugaison :
 > La relation être conjugué de quelqu'un est symétrique
 
 
-### 3. Problème projeté
+## 3. Problème projeté
 
 Enfin, avant de rentrer dans le coeur du sujet, il nous reste à définir la notion de projection qui nous permettra de manipuler aisément nos partition et leurs interactions avec la fonction test.
 
@@ -278,45 +278,132 @@ La notion de projection n'a rien de mystérieux, il faut considérer cela comme 
 
 Maintenant que nous avons introduit les notions essentielles à l'étude de nos espaces de recherche afin de déterminer leur atomes, nous allons pouvoir entrer dans le coeur du sujet avec la description l'algorithme central.
 
-## III. Description de l’algorithme
+# III. Description des algorithmes
 
-On considère un algorithme récursif :
+## 1. L'algorithme récursif de base : DDMin
 
 ### Entrées et Sorties
 
 - **Entrée :**  
   - un problème $(E, T)$
-    - Sous la forme d'une liste E, représentant les éléments de E
+    - Sous la forme d'une liste de liste : 'delta', représentant une partition grossière de E
     - Et d'une fonction 'test', représentant T 
+
 
 - **Sortie :**  
   - Liste de sous liste de la liste d'entrée E, contentant une partie des atomes de notre problème
 
 ### Pseudo-code
 
-```text
-Algorithm NomDeLAlgo(G, s):
+
+```pseudo 
+Algorithme DDMin(delta, test):
+
   // Initialisation
-  pour chaque sommet v dans V:
-      d[v] ← ∞
-      parent[v] ← null
-  d[s] ← 0
+  E = la concaténation de delta
 
-  Q ← file de priorité contenant tous les sommets
+  Tant que is_maximal(delta) est faux:
 
-  // Boucle principale
-  tant que Q ≠ ∅:
-      u ← extraire_min(Q)
-      pour chaque voisin v de u:
-          si d[u] + w(u,v) < d[v]:
-              d[v] ← d[u] + w(u,v)
-              parent[v] ← u
-              mettre_à_jour(Q)
+      // on raffine la partition et crée la fonction de conjugaison
+      delta, conj = split(delta)
 
-  retourner d, parent
+      // on pose nabla comme l'ensemble des complémentaires des élements de delta
+      nabla = [complementaire(delta_i, E) pour delta_i dans delta]
+
+      resultats = [test(nabla_i) pour nabla_i dans nabla]
+
+
+      Si (resultat == ✓ pour tout resultat dans results):
+          // La partition est grossière, on raffine
+          continue
+
+      Sinon:
+          // certains complementaire échouent, on va récurser
+          I = La liste des indices de nabla tels que test(nabla[i]) == ✗
+
+          M = generate_test_matrix(nabla, conj) 
+          // M est égale à la matrice n*n des test(nabla_i inter nabla_j)
+
+          MR = la matrice réduite où l'on a retiré les lignes et les colonnes correspondants à des éléments qui ne sont pas dans I, construite directement à partir de M
+
+          Si pour tout resultat dans MR, resultat == ✗:
+
+              // l'ensemble sur lequel on va récurser
+              preparation = intersection de nabla[i] pour i
+
+              // on garde bien la même structure de partition
+              next = [delta_i pour delta_i dans delta tel que (delta_i inclu dans preparation)]
+
+              retourner DDMin(next, test)
+          Sinon:
+              i, j = find_non_failing(MR)
+              // où find_non_failing(matrix) renvoie le premier couple i, j dans l'ordre lexicographique tel que matrix[i][j] == ✓
+              
+              I = la liste des indices i_0 tels que MR[i][i_0] == ✗
+              J = la liste des indices j_0 tels que MR[j][j_0] == ✗
+              // En particulier I contient i et J contient j donc sont non vides
+
+              // on crée les ensembles sur lesquels on va récurser
+              preparation1 = intersection de nabla[i] pour i dans I
+              preparation2 = intersection de nabla[j] pour j dans J
+              
+              // on fait bien attention à garder la structure de partition du départ
+              next1 = [delta_i pour delta_i dans delta tel que (delta_i inclu dans preparation1)]
+              next2 = [delta_j pour delta_j dans delta tel que (delta_j inclu dans preparation2)]
+
+
+              retourner DDMin(next1, test) union DDMin(next2, test) // L'execution se lance en parallèle
+
+  retourner [E]
 ```
 
-## IV. Preuve de Correction
+## 2. L'algorithme complet : RDDMin
+
+### Entrées et Sorties
+
+- **Entrée :**  
+  - un problème $(E, T)$, supposé bien posé
+    - Sous la forme d'une liste E, représentant les éléments de E
+    - Et d'une fonction 'test', représentant T 
+
+- **Sortie :**  
+  - Liste de sous liste de la liste d'entrée E, contentant l'ensemble des atomes du problème d'entrée
+
+### Pseudo-code
+
+```pseudo 
+Algorithme RDDMin(E, test):
+    // pour stocker les résultats
+    atomes = []
+
+    // changera à chaque itération
+    espace_de_recherche_actuel = E
+    nouveaux_atomes = DDMin(espace_de_recherche_actuel, test)
+
+    Tant que nouveaux_atomes != []:
+        // on ajoute les nouveaux résultats
+        atomes += nouveaux_atomes
+
+        // on retire les atomes trouvés de l'espace de recherche actuel
+        a_retirer = la concaténation de nouveaux_atomes
+        espace_de_recherche_actuel = complémentaire(a_retirer, espace_de_recherche_actuel)
+
+        // on passe à l'itération suivante 
+        nouveaux_atomes = DDMin(espace_de_recherche_actuel, test)
+    
+    retourner atomes
+
+
+```
+
+
+# IV. Preuves de Terminaison
+
+## L'algorithme DDMin:
+
+Soit 
+
+
 
 ### Invariants
 
@@ -324,7 +411,7 @@ Algorithm NomDeLAlgo(G, s):
 
 Tu peux aussi énoncer des **lemmes** intermédiaires si nécessaire :  
 
-> **Lemme 1.** Si un sommet $u$ est extrait de $Q$ avec $d[u]$, alors $d[u] = d^*(u)$ (distance optimale).  
+> **Lemme 1.** Soit (E, )
 
 **Preuve (esquisse) :**  
 On montre par induction sur le nombre de sommets extraits :  
@@ -344,16 +431,11 @@ Ce qui prouve la **correction** de l’algorithme. $\square$
 
 ---
 
-## V. Preuve de Terminaison
+## V. Preuve de Correction et de Terminaison 
 
-On montre que la boucle principale ne peut pas être infinie :
+### Terminaison de DDMin:
 
-- À chaque itération, au moins un sommet est retiré de $Q$.  
-- Comme $Q$ contient initialement $|V|$ sommets et qu’aucun n’est réinséré, le nombre d’itérations est au plus $|V|$.  
 
-Donc l’algorithme termine toujours après un nombre fini d’étapes. $\square$
-
----
 
 ## VI. Analyse de Complexité
 

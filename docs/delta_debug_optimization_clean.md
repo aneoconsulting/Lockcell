@@ -10,6 +10,8 @@ _Auteur(s), Date_
 
 ---
 
+
+
 ## I. Introduction
 
 Présente le contexte, le problème étudié et l'objectif de l'article.
@@ -165,7 +167,7 @@ Cette démonstration nous permettra donc de parler d'un problème indifféremmen
 
 Maintenant que nous avons défini notre problème, il est clair que notre objectif va être de déterminer des éléments $b_1,...,b_n$ au sein d'un problème.
 
-Cependant, il nous reste encore un aspect des problèmes à traiter, en effet, on a vu qu'au sein d'un problème on avait des atomes à déterminer, mais dans le cas où ces atomes ont des intersection non nulles il devient compliquer de les traiter dans la pratique.\
+Cependant, il nous reste encore un aspect des problèmes à traiter, en effet, on a vu qu'au sein d'un problème on avait des atomes à déterminer, mais dans le cas où ces atomes ont des intersections non nulles il devient compliquer de les traiter dans la pratique.\
 En effet, imaginons un ensemble simple {1, 2, 3} et $b_1 = \{1, 2\}$, $ b_2 = \{2, 3\}$, alors imaginons que nous "fixons" le bug représenté par $b_1$, alors on a "retiré" l'incertitude représentée par 2, dans le cas de nos lignes de code, cela correspond par exemple à augmenter la précision sur les lignes 1 et 2. Dans ce cas là, nous avons en quelque sorte retiré les perturbations possibles des lignes 1 et 2, et trouver $b_2$ n'a plus forcément de sens. Pour cette raison nous introduisons une dernière définition :
 <div class="definition">
   <div class="definition-title">Définition : Problème bien posé</div>
@@ -189,7 +191,7 @@ En effet, imaginons un ensemble simple {1, 2, 3} et $b_1 = \{1, 2\}$, $ b_2 = \{
   <div class="definition-title">Définition : Problème trivial</div>
   <div class="definition-body">
 
-> On dit d'un problème $(E, B)$ qu'il est trivial si  E est un atome, c'est à dire si $B = \{E\}$.\
+> On dit d'un problème $(E, B)$ qu'il est trivial si E est un atome, c'est à dire si $B = \{E\}$.\
 > Cela équivault à dire : $\forall A \in \mathcal{P}(E), T(A) = ✗ \iff A = E$
 
   </div>
@@ -417,9 +419,7 @@ Enfin nous introduisons la notion de conjugaison :
 </div>
 
 
-### 3. Problème projeté
-
-Enfin, avant de rentrer dans le coeur du sujet, il nous reste à définir la notion de projection qui nous permettra de manipuler aisément nos partition et leurs interactions avec la fonction test.
+Maintenant il nous faut définir les notions qui nous permettront de manipuler aisément nos partition et leurs interactions avec la fonction test.
 
 <div class="definition">
   <div class="definition-title">Définition : Partition grossière</div>
@@ -427,7 +427,7 @@ Enfin, avant de rentrer dans le coeur du sujet, il nous reste à définir la not
 
 > Soit $(E, T)$ un problème, on dit d'une partition $\Delta$ qu'elle est grossière si
 > $$\forall i\in\Delta, T(\nabla_i) = ✓$$
-> On la dit séparante dans le cas contraire
+> On la dit séparante dans le cas contraire et on note $I_{\Delta} = \{i\in\Delta \text { | } T(\nabla_i) = ✗\}$
 
   </div>
 </div>
@@ -436,7 +436,7 @@ Enfin, avant de rentrer dans le coeur du sujet, il nous reste à définir la not
   <div class="remarque-title">Remarque : </div>
   <div class="remarque-body">
 
-> La défintion précédente implique directement que $\forall i\in\Delta, T(\Delta_i) = ✓$
+> La défintion précédente implique directement que $\forall i\in\Delta, T(\Delta_i) = ✓$, sauf pour la partition triviale $\{E\}$
 >- On rappelle que l'on indice les éléments de $\Delta$ par eux même, donc $\forall i\in\Delta, T(\Delta_i) = ✓$ signifie que pour tous les éléments de notre partition la fonction test n'échoue pas dessus.
 >- De même $\forall i\in\Delta, T(\nabla_i) = ✓$ signifie que la fonction test n'échoue sur aucun des complémentaires des éléments de notre partition.
 
@@ -503,6 +503,30 @@ On peut donc trouver un ensemble strictement plus petit qui contient une partie 
   </div>
 </div>
 
+<div class="proposition">
+  <div class="proposition-title">Proposition : </div>
+  <div class="proposition-body">
+
+> Soit $(E, T)$ un problème, $\Delta$ une partition sur E à la fois maximale et grossière alors $(E, T)$ est trivial, et les atomes du problème sont $B = \{E\}$
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+<details>
+  <summary><strong>Cliquez pour voir la preuve</strong></summary>
+
+> TODO
+
+</details>
+
+  </div>
+</div>
+
+  </div>
+</div>
+
+### 3. Problème projeté
 Maintenant, il ne nous reste qu'à définir la projection d'un problème
 
 <div class="definition">
@@ -553,6 +577,7 @@ Même si $(E, T)$ est bien posé et donc que $B$ vérifie ($\star$), il est poss
 
 > Soit $(E, T)$ un problème et B ses atomes, $\Delta$ une partition de E, $(\Delta, T_{\Delta})$ le problème projeté et $B^{\Delta}$ la projection de $B$ sur $\Delta$.
 >$$\text{Les atomes projetés } B^{\Delta} \text{sont les atomes de} (\Delta, T_{\Delta})$$
+> En particulier, $B^{\Delta}$ verifie ($\star$).
 
   </div>
 </div>
@@ -588,47 +613,352 @@ Même si $(E, T)$ est bien posé et donc que $B$ vérifie ($\star$), il est poss
 La notion de projection n'a rien de mystérieux, il faut considérer cela comme regarder notre ensemble de départ à travers les éléments de la partition. Les éléments d'un même $\Delta_i$ sont inséparable et quand on trouve nos atomes à cette échelle, on raffine cette partition afin de retirer les bouts inutiles, voici une illustration grossière pour mieux comprendre :
 
 
+### 4. Matrice d'interaction
+
+Nous pouvons maintenant parler librement de nos partions, en prendre des intersetions, leur appliquer la fonction test, définissons alors un outils qui sera essentiel à la preuve de l'algorithme
+
+<div class="definition">
+  <div class="definition-title">Définition : Matrice d'interaction</div>
+  <div class="definition-body">
+
+> Soit $(E,T)$ un problème et $\Delta$ une partition sur $E$ et $n$ son cardinal, on définit la matrice d'interaction de $\Delta$ comme la matrice M de $M_n({✓, ✗})$ telles que :
+> $$ \forall i,j in \Delta, M_{i,j} = T(\nabla_i \cap \nabla_j)
+
+
+  </div>
+</div>
+
+<div class="remarque">
+  <div class="remarque-title">Remarque : </div>
+  <div class="remarque-body">
+
+> On note que l'on a ici encore utilisé des éléments de $\Delta$ pour indexer les éléments de la matrice.
+  </div>
+</div>
+
+<div class="propriete">
+  <div class="propriete-title">Propriété :</div>
+  <div class="propriete-body">
+
+> Soit $(E,T)$ un problème et $\Delta$ une partition sur $E$ et M sa matrice de perturbation, si on a $\nabla_i$ un complémentaire d'un élément de $\Delta$ tel que $T(\nabla_i) = ✓$ alors la colonne et la ligne associée à $\nabla_i$ sont nulles (égales à ✓ partout).
+
+  </div>
+</div>
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+> La démonstration découle directement de la croissance de T
+
+
+  </div>
+</div>
+
+La proposition précédente nous pousse à définir l'objet suivant :
+
+<div class="definition">
+  <div class="definition-title">Définition : Matrice d'interaction réduite</div>
+  <div class="definition-body">
+
+> Soit $(E,T)$ un problème, $\Delta$ une partition sur $E$ et M sa matrice d'interaction, on définit la matrice d'interaction réduite MR comme la matrice M à laquelle on a retiré les lignes et les colonnes correspondants à des $\nabla_i$ tels que $T(\nabla_i) = ✓$
+
+  </div>
+</div>
+
 Maintenant que nous avons introduit les notions essentielles à l'étude de nos espaces de recherche afin de déterminer leur atomes, nous allons pouvoir entrer dans le coeur du sujet avec la description l'algorithme central.
 
-## III. Description de l’algorithme
+# III. Description des algorithmes
 
-On considère un algorithme récursif :
+## 0. Définition des fonction auxiliaires :
+
+### is_maximal
+---
+#### Entrées et Sorties
+
+- **Entrée :**  
+  - une partition P d'un ensemble E
+
+
+- **Sortie :**  
+  - Un booléen qui vaut true si tous les éléments de P sont des singletons, donc si P est maximale
+
+
+### split
+---
+#### Entrées et Sorties
+
+- **Entrée :**  
+  - une partition P d'un ensemble E
+
+
+- **Sortie :**  
+  - Un raffinement de P ainsi qu'une fonction de conjugaison ($\text{conj}(\nabla_i) = \overline{\nabla_i}$)
+
+
+### complementaire
+---
+#### Entrées et Sorties
+
+- **Entrée :**  
+  - une partie A d'un ensemble E et cet ensemble E
+
+
+- **Sortie :**  
+  - la liste représentant le complémentaire de A dans E
+
+### generate_test_matrix
+---
+#### Entrées et Sorties
+
+- **Entrée :**  
+  - une partition $P$ d'un ensemble $E$
+  - les indices $I$ de $P$ tels que $\text{test}(P[i]) = ✗$
+  - Une fonction $\text{conj}$ de conjugaison sur $P$
+
+- **Sortie :**  
+  - un matrice M $n\times n$ où $n = |P|$ d'éléments de $\{✓,✗\}$ telle que $\forall i, j \in ⟦1, n⟧, M_{i,j} = test(\nabla_i\cap\nabla_j)$
+
+On étudira plus loin la complexité de cette fonction.
+
+
+## 1. L'algorithme récursif de base : DDMin
 
 ### Entrées et Sorties
 
 - **Entrée :**  
   - un problème $(E, T)$
-    - Sous la forme d'une liste E, représentant les éléments de E
+    - Sous la forme d'une liste de liste : 'delta', représentant une partition grossière de E
     - Et d'une fonction 'test', représentant T 
+
 
 - **Sortie :**  
   - Liste de sous liste de la liste d'entrée E, contentant une partie des atomes de notre problème
 
 ### Pseudo-code
 
-```text
-Algorithm NomDeLAlgo(G, s):
+
+```pseudo 
+Algorithme DDMin(delta, test):
+
   // Initialisation
-  pour chaque sommet v dans V:
-      d[v] ← ∞
-      parent[v] ← null
-  d[s] ← 0
+  E = la concaténation de delta
 
-  Q ← file de priorité contenant tous les sommets
+  Tant que is_maximal(delta) est faux:
 
-  // Boucle principale
-  tant que Q ≠ ∅:
-      u ← extraire_min(Q)
-      pour chaque voisin v de u:
-          si d[u] + w(u,v) < d[v]:
-              d[v] ← d[u] + w(u,v)
-              parent[v] ← u
-              mettre_à_jour(Q)
+      // on raffine la partition et crée la fonction de conjugaison
+      delta, conj = split(delta)
 
-  retourner d, parent
+      // on pose nabla comme l'ensemble des complémentaires des élements de delta
+      nabla = [complementaire(delta_i, E) pour delta_i dans delta]
+
+      resultats = [test(nabla_i) pour nabla_i dans nabla]
+
+
+      Si (resultat == ✓ pour tout resultat dans results):
+          // La partition est grossière, on raffine
+          continue
+
+      Sinon:
+          // certains complementaire échouent, on va récurser
+          I = La liste des indices de nabla tels que test(nabla[i]) == ✗
+
+          M = generate_test_matrix(nabla, I, conj) 
+          // M est égale à la matrice n*n des test(nabla_i inter nabla_j)
+
+          MR = la matrice réduite où l'on a retiré les lignes et les colonnes correspondants à des éléments qui ne sont pas dans I, construite directement à partir de M
+
+          Si pour tout resultat dans MR, resultat == ✗:
+
+              // l'ensemble sur lequel on va récurser
+              preparation = intersection de nabla[i] pour i
+
+              // on garde bien la même structure de partition
+              next = [delta_i pour delta_i dans delta tel que (delta_i inclu dans preparation)]
+
+              retourner DDMin(next, test)
+          Sinon:
+              i, j = find_non_failing(MR)
+              // où find_non_failing(matrix) renvoie le premier couple i, j dans l'ordre lexicographique tel que matrix[i][j] == ✓
+              
+              I = la liste des indices i_0 tels que MR[i][i_0] == ✗
+              J = la liste des indices j_0 tels que MR[j][j_0] == ✗
+              // En particulier I contient i et J contient j donc sont non vides
+
+              // on crée les ensembles sur lesquels on va récurser
+              preparation1 = intersection de nabla[i] pour i dans I
+              preparation2 = intersection de nabla[j] pour j dans J
+              
+              // on fait bien attention à garder la structure de partition du départ
+              next1 = [delta_i pour delta_i dans delta tel que (delta_i inclu dans preparation1)]
+              next2 = [delta_j pour delta_j dans delta tel que (delta_j inclu dans preparation2)]
+
+
+              retourner DDMin(next1, test) union DDMin(next2, test) // L'execution se lance en parallèle
+
+  retourner [E]
 ```
 
-## IV. Preuve de Correction
+## 2. L'algorithme complet : RDDMin
+
+### Entrées et Sorties
+
+- **Entrée :**  
+  - un problème $(E, T)$, supposé bien posé
+    - Sous la forme d'une liste E, représentant les éléments de E
+    - Et d'une fonction 'test', représentant T 
+
+- **Sortie :**  
+  - Liste de sous liste de la liste d'entrée E, contentant l'ensemble des atomes du problème d'entrée
+
+### Pseudo-code
+
+```pseudo 
+Algorithme RDDMin(E, test):
+    // pour stocker les résultats
+    atomes = []
+
+    // changera à chaque itération
+    espace_de_recherche_actuel = E
+
+    Tant que test(espace_de_recherche_actuel) == ✗:
+        // on trouve des atomes de l'espace_de_recherche_actuel
+        nouveaux_atomes = DDMin([espace_de_recherche_actuel], test)
+
+        // on ajoute les nouveaux résultats
+        atomes += nouveaux_atomes
+
+        // on retire les atomes trouvés de l'espace_de_recherche_actuel
+        a_retirer = la concaténation de nouveaux_atomes
+        espace_de_recherche_actuel = complémentaire(a_retirer, espace_de_recherche_actuel)
+
+    
+    retourner atomes
+```
+
+
+# IV. Preuves de Terminaison
+
+Avant toute chose nous allons faire une hypothèse simplificatrice sur la taille des problèmes projetés dans la suite des démonstrations, en gardant en tête que cette hypothèse n'est pas nécessaire et qu'une meilleure implémentation de l'algorithme permettrait de s'en débarrasser.
+
+<div class="definition">
+  <div class="definition-title">Définition : Partition simple</div>
+  <div class="definition-body">
+
+> Soit $(E,T)$ un problème et $B$ ses atomes. Soit $\Delta$ une partition sur E, on dit que $\Delta$ est simple si $|B^{\Delta}| \leq 2$
+
+  </div>
+</div>
+
+<div class="remarque">
+  <div class="remarque-title">Remarque : </div>
+  <div class="remarque-body">
+
+> Nous verrons plus tard une relation entre le cardinal des atomes et le cardinal maximum d'un arbre de partition grossière, qui permettra de se rendre compte que cette hypothèse n'est pas si forte qu'il n'y parait dans le cas d'atomes de petit cardinal.
+
+  </div>
+</div>
+
+On s'autorisera dans la suite de l'étude à supposer que sur des partitions étudiées sont simples.
+
+Avant de s'attaquer à la preuve à proprement parler, démontrons une propriété dans le cas des partitions simples: 
+
+<div class="proposition">
+  <div class="proposition-title">Proposition : Critère de séparation</div>
+  <div class="proposition-body">
+
+> Soit $(E,T)$ un problème et $\Delta$ une partition simple sur $E$, $MR \in M_k(\{✓, ✗\})$ sa matrice de perturbation réduite et $B^{\Delta}$ le projeté des atomes du problème sur $\Delta$ alors:
+>
+>$$ |B^{\Delta}| = 1 \iff MR = ✗_{M_k(\{✓, ✗\})}$$
+
+
+  </div>
+</div>
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+<details>
+  <summary><strong>Cliquez pour voir la preuve</strong></summary>
+
+> On montre le résultat par double implication:
+>
+> $[\Rightarrow]$ Si $|B^{\Delta}| = 1$, on note $b$ son seul élément et on a $\forall \nabla_i \in \Delta, T(\nabla_i) = ✗ \iff b\subseteq\nabla_i$ en réduisant la propriété d'équivalence atomique au cas où l'on à qu'un seul atome.
+>- Donc $\forall i, j \in I_{\Delta}, b\subseteq \nabla_i \text{ et } b\subseteq \nabla_j$ 
+>- D'où  $\forall i, j \in I_{\Delta}, b\subseteq \nabla_i \cap \nabla_j$
+>- Ainsi $\forall i, j \in I_{\Delta}, T(\nabla_i \cap \nabla_j) = ✗$ (D'après la propriété **)
+>- Et donc $\forall i, j \in I_{\Delta}, (MR)_{i,j} = ✗$
+> Ce qui est la même chose que $MR = ✗_{M_k(\{✓, ✗\})}$.
+>
+> $[\Leftarrow]$ Si $MR = ✗_{M_k(\{✓, ✗\})}$, soit $b_1, b_2 \in B^{\Delta}$. Supposons $b_1 \neq b_2$:\
+> Comme $B^{\Delta}$ verifie ($\star$) d'après la proposition **, on sait que $b_1$ et $b_2$ ne sont pas inclus l'un dans l'autre, on a donc $i, j\in\Delta$ tels que:
+> $$\Delta_i \not\in b_1\text{ et } \Delta_i \in b_2$$
+> et
+> $$\Delta_j \not\in b_2\text{ et } \Delta_j \in b_1$$
+> En particulier on a $(b_1\subseteq\nabla_i$ et $b_1\nsubseteq\nabla_j)$ et $(b_2\subseteq\nabla_j$ et $b_2\nsubseteq\nabla_i)$.\
+> On en déduit : $b_1, b_2\nsubseteq\nabla_i\cap\nabla_j$ et comme $\Delta$ est simple on a au plus 2 eléments dans $B^{\Delta}$ et donc $\nabla_i\cap\nabla_j$ ne contient aucun atome.\
+> D'après la propriété d'équivalence atomique on a $T(\nabla_i\cap\nabla_j) = ✓$ et donc $(MR)_{i,j} = ✓$, absurde.
+> 
+> Ce qui conclut la démonstration.
+
+</details>
+
+  </div>
+</div>
+
+## L'algorithme DDMin:
+
+<div class="proposition">
+  <div class="proposition-title">Proposition : L'algorithme DDMin termine toujours et renvoie au moins un atome du problème d'entrée </div>
+  <div class="proposition-body">
+
+> Démo :\
+> On démontre par récurrence : Soit pour tout $N\in\mathbb{N}^*, P(N)$, l'assertion : $\forall (E, T)\text{ problème}, |E| \leq N \Rightarrow DDMin(\{E\}, T)\text{ termine et retourne une partie non vide des atomes de E}$
+> 
+> ### Initialisation :
+> Si $N = 1$, soit $(E, T)$ un problème tel que $|E| \leq 1$, comme $T(E) = ✗ \neq ✓ = T(\varnothing)$ on a forcément $E\neq\varnothing$ et la seule partition de E est $\{E\}$, elle est bien grossière (cf. la définition) et maximale, on a donc E, atome de E et is_maximal(E) == True d'où $DDMin(\{E\}, T) = [E]$ et donc P(1)
+>
+> ### Hérédité :
+> Soit $N\in\mathbb{N}^*$ tel que $P(N)$, montrons $P(N+1)$ :
+>
+> Soit $(E, T)$ un problème tel que $|E| \leq N+1$, on note les partitions delta succesive de chaque passage dans la boucle les $\Delta^1,...,\Delta^n$ avec $n\in\mathbb{N}^* \cup \{\infty \}$, or comme pour tout $i\in\mathbb{N}^*$ $\Delta_{i+1}$ est un raffinement de $\Delta_{i}$, $\{E\} = \Delta^1 \rightarrow ... \rightarrow \Delta^i$ est un arbre sur E pour tout $i \lt n$. Or d'après la proposition ** la taille d'un arbre est bornée, d'où $n \lt \infty$
+> On a forcément $\Delta^1,...,\Delta^{n-1}$ grossière, sinon on n'aurait pas créé de $\Delta^n$.
+>
+> Si $\Delta^n$ est grossière, alors forcément elle est maximale. En effet, si ce n'était pas le cas on aurait parcouru encore une fois la boucle et on aurait eu $\Delta^{n+1}$. Et si c'est le cas alors DDMin retourne $[E]$ et donc termine. De plus on a $\Delta^n$ un partition de $E$ grossière et maximale, donc d'après la proposition **, $(E, T)$ est trivial et donc $E$ est bien un atome du problème.
+>
+> Si $\Delta^n$ n'est pas grossière alors on crée la matrice réduite MR de $\Delta^n$ (On suppose encore ici que $\Delta^n$ est simple).
+
+
+> Si $MR = ✗$ alors on sait d'après le critère de séparation que $B^{\Delta^n}$ est de cardinal 1, on a alors en notant $b$ sont unique élément:
+> $$\forall \nabla^n_i \in \Delta, T(\nabla^n_i) = ✗ \iff b\subseteq\nabla^n_i$$
+>- D'où
+> $$\forall i \in I_{\Delta}, b\subseteq\nabla^n_i$$
+>- Et donc
+> $$b\in\bigcap_{i\in I_{\Delta}} \nabla^n_i$$
+>- Ainsi si $Next = \bigcap_{i\in I_{\Delta^n}} \nabla^n_i$$ on a bien $T(Next) = ✗$ et donc $(Next, T)$ est un sous problème de $(E, T)$ qui a pour atomes les atomes de $(E, T)$ inclus dans $Next$, qui est non vide. De plus, clairement $|Next| \lt |E|$, d'où $|Next| \leq n$
+>- On retourne $DDMin(Next, T)$, qui d'après P(n) termine et renvoie une partie non vides des atomes de $(Next, T)$.\
+>- Ainsi le programme termine et retourne bien une partie non vide des atomes de $(E, T)$
+
+
+> Sinon on a $i,j \in I_{\Delta^n}, T(\nabla^n_i\cap\nabla^n_j) = ✓$, comme $\Delta^n$ est simple on a $b_1, b_2$ les deux atomes du problème et donc forcément $(b_1\subseteq\nabla^n_i$ et $b_2\nsubseteq\nabla^n_i)$ et $(b_2\subseteq\nabla^n_j$ et $b_1\nsubseteq\nabla^n_j)$ quitte à les échanger.
+>- Donc $\forall i_0\in I_{\Delta^n}, T(\nabla^n_i\cap\nabla^n_{i_0}) = ✗\iff b_1\subseteq\nabla^n_{i_0}$
+>- D'où $I_i = \{i_0 \in I_{\Delta^n} \text{ | } T(\nabla^n_i\cap\nabla^n_{i_0}) = ✗\} = \{i_0 \in I_{\Delta^n} \text{ | } b_1\subseteq\nabla^n_{i_0} \}$
+>- Et donc $b_1 \subseteq Next1 = \bigcap_{i_0\in I_i} \nabla^n_{i_0}$, c'est même le plus petit sous ensemble de $\Delta^n$ le contenant au sens de l'inclusion.
+>- De la même façon on a $b_2 \subseteq Next2 = ""$
+>- On a comme pour $Next$ : $|Next1|, |Next2| \leq n$ et $(Next1, E)$, $(Next2, T)$ sont des sous problèmes de $(E, T)$, donc $DDMin(Next1, T)$ et $DDMin(Next2, T)$ terminent et renvoient chacun une partie non vides des atomes chacun des problèmes.
+>- En faisant l'union des deux on obtient bien une partie non vides des atomes de $(E, T)$.
+>
+> D'où $P(n+1)$, ce qui clot la récurrence.
+>
+> $\{P(n)\text{ | } n\in \mathbb{N}^* \}$ implique directement la propriété.
+>
+> Ce qui conclut.
+
+  </div>
+</div>
+
+
 
 ### Invariants
 
@@ -636,7 +966,7 @@ Algorithm NomDeLAlgo(G, s):
 
 Tu peux aussi énoncer des **lemmes** intermédiaires si nécessaire :  
 
-> **Lemme 1.** Si un sommet $u$ est extrait de $Q$ avec $d[u]$, alors $d[u] = d^*(u)$ (distance optimale).  
+> **Lemme 1.** Soit (E, )
 
 **Preuve (esquisse) :**  
 On montre par induction sur le nombre de sommets extraits :  
@@ -656,16 +986,10 @@ Ce qui prouve la **correction** de l’algorithme. $\square$
 
 ---
 
-## V. Preuve de Terminaison
+## V. Preuve de Correction et de Terminaison 
 
-On montre que la boucle principale ne peut pas être infinie :
+### Terminaison de DDMin:
 
-- À chaque itération, au moins un sommet est retiré de $Q$.  
-- Comme $Q$ contient initialement $|V|$ sommets et qu’aucun n’est réinséré, le nombre d’itérations est au plus $|V|$.  
-
-Donc l’algorithme termine toujours après un nombre fini d’étapes. $\square$
-
----
 
 ## VI. Analyse de Complexité
 

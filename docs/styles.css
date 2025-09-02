@@ -1,4 +1,4 @@
-/* Style commun à tous les blocs */
+/* Styles communs */
 .definition, .remarque, .propriete, .proposition, .convention, .demo {
   border-radius: 8px;
   margin: 1.2em 0;
@@ -6,108 +6,101 @@
   overflow: hidden;
   font-family: sans-serif;
 }
-/* 🔧 Définition (bleu) */
-.definition-title { 
-  background: #0d47a1; /* bleu foncé */
-  color: white; 
-  font-weight: bold; 
-  padding: 0.5em 1em;
-}
-.definition-body  { 
-  background: #1976d2; /* bleu plus clair */
-  color: rgb(0, 0, 0);        /* texte blanc pour contraste */
-  padding: 1em 1.2em; 
-}
 
-/* 🔧 Remarque (vert) */
-.remarque-title { 
-  background: #1b5e20; 
-  color: white; 
-  font-weight: bold; 
-  padding: 0.5em 1em;
+/* Définition (Bleu) */
+.definition {
+  border: 2px solid #1565c0;
 }
-.remarque-body  { 
-  background: #43a047; 
-  color: rgb(0, 0, 0); 
-  padding: 1em 1.2em; 
-}
-
-/* 🔧 Propriété (orange) */
-.propriete-title { 
-  background: #f35907; 
-  color: white; 
-  font-weight: bold; 
-  padding: 0.5em 1em;
-}
-.propriete-body  { 
-  background: #fb8c00; 
-  color: black; /* fond clair -> texte noir */
-  padding: 1em 1.2em; 
-}
-
-/* 🔧 Proposition (rouge) */
-.proposition-title { 
-  background: #ec3131; 
-  color: rgb(0, 0, 0); 
-  font-weight: bold; 
-  padding: 0.5em 1em;
-}
-.proposition-body  { 
-  background: #ff6865; 
-  color: rgb(0, 0, 0); 
-  padding: 1em 1.2em; 
-}
-
-/* 🔧 Démo (gris neutre) */
-.demo-title { 
-  background: #005a05; 
-  color: rgb(0, 0, 0); 
-  font-weight: bold; 
-  padding: 0.5em 1em;
-}
-.demo-body  { 
-  background: #61d35d; 
-  color: rgb(0, 0, 0); 
-  padding: 1em 1.2em; 
-}
-
-
-/* 🔧 Convention (violet) */
-.convention-title { 
-  background: #6b20c7; /* Violet foncé */
+.definition-title {
+  background: #1565c0;
   color: white;
-  font-weight: bold;
   padding: 0.5em 1em;
 }
-.convention-body {
-  background: #c14de0; /* Violet plus clair */
-  color: rgb(0, 0, 0);
+.definition-body {
+  background: white;
+  color: black;
   padding: 1em 1.2em;
 }
 
+/* Remarque (Vert) */
+.remarque {
+  border: 2px solid #2e7d32;
+}
+.remarque-title {
+  background: #2e7d32;
+  color: white;
+  padding: 0.5em 1em;
+}
+.remarque-body {
+  background: white;
+  color: black;
+  padding: 1em 1.2em;
+}
 
-/* Supprimer le style gris natif des blockquotes */
+/* Propriété (Orange) */
+.propriete {
+  border: 2px solid #ef6c00;
+}
+.propriete-title {
+  background: #ef6c00;
+  color: white;
+  padding: 0.5em 1em;
+}
+.propriete-body {
+  background: white;
+  color: black;
+  padding: 1em 1.2em;
+}
+
+/* Proposition (Rouge) */
+.proposition {
+  border: 2px solid #c62828;
+}
+.proposition-title {
+  background: #c62828;
+  color: white;
+  padding: 0.5em 1em;
+}
+.proposition-body {
+  background: white;
+  color: black;
+  padding: 1em 1.2em;
+}
+
+/* Convention (Violet) */
+.convention {
+  border: 2px solid #6a1b9a;
+}
+.convention-title {
+  background: #6a1b9a;
+  color: white;
+  padding: 0.5em 1em;
+}
+.convention-body {
+  background: white;
+  color: black;
+  padding: 1em 1.2em;
+}
+
+/* Démo (Gris) */
+.demo {
+  border: 2px solid #424242;
+}
+.demo-title {
+  background: #424242;
+  color: white;
+  padding: 0.5em 1em;
+}
+.demo-body {
+  background: white;
+  color: black;
+  padding: 1em 1.2em;
+}
+
+/* Supprime le gris natif des blockquotes */
 blockquote {
   background: none !important;
   border-left: none !important;
   margin: 0 !important;
   padding: 0 !important;
-}
-
-.demo-body details {
-  margin-top: 0.5em;
-}
-
-.demo-body summary {
-  cursor: pointer;
-  font-weight: bold;
-  list-style: none; /* supprime la puce par défaut */
-}
-
-.demo-body summary::marker {
-  content: "▶ "; /* petite flèche personnalisée */
-}
-
-.demo-body[open] summary::marker {
-  content: "▼ "; /* flèche vers le bas quand ouvert */
 }
