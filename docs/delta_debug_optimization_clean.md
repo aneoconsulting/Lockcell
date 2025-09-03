@@ -202,16 +202,16 @@ En effet, imaginons un ensemble simple {1, 2, 3} et $b_1 = \{1, 2\}$, $ b_2 = \{
   <div class="definition-body">
 
 > Soit $(E,T)$ un problème et $B$ ses atomes. Soit F une sous partie de E telle que $T(F) = ✗$, on dit alors que $(F, T_{|F})$ est un sous problème de $(E, T)$.\
-> On a alors que $(F, T_{|F})$ est un problème et ses atomes sont les élements de $B_{|F} = \{b\in B \text{ | } b \subseteq F\}$
 
   </div>
 </div>
 
-<div class="remarque">
-  <div class="remarque-title">Remarque : </div>
-  <div class="remarque-body">
+<div class="propriete">
+  <div class="propriete-title">Propriété : </div>
+  <div class="propriete-body">
 
-> On a bien $B_{|F}$ non vide, en effet d'après l'équivalence atomique comme $T(F) = ✗$ on a bien $b\in B$ tel que $b \subseteq F$
+> Soit $(E,T)$ un problème, $B$ ses atomes et $(F, T_{|F})$ un sous problème de $(E,T)$.\
+> Alors $(F, T_{|F})$ est un problème et ses atomes sont les élements de $B_{|F} = \{b\in B \text{ | } b \subseteq F\}$
 
   </div>
 </div>
@@ -263,14 +263,35 @@ Maintenant que nous avons pu poser précisemment ce qu'est un problème, nous al
   </div>
 </div>
 
+
+<div class="definition">
+  <div class="definition-title">Définition : Sous partition</div>
+  <div class="definition-body">
+
+> Soit $(E,T)$ un problème et $\Delta^1$ une partition de $E$. On dit que $\Delta^2$ est une sous partition si $\Delta^2 \subseteq \Delta^1$
+
+  </div>
+</div>
+
+<div class="remarque">
+  <div class="remarque-title">Remarque : </div>
+  <div class="remarque-body">
+
+> Un sous partition de $\Delta$, un partition sur un espace $E$, n'est rien d'autre qu'une partition d'un sous ensemble de E, à condition que cette ensemble soit descriptible par $\Delta$
+
+  </div>
+</div>
+
 Cette première définition nous permet de faire une recherche binaire dans notre espace de recherche et de définir un arbre de recherche:
 
 <div class="definition">
   <div class="definition-title">Définition : Arbre de recherche</div>
   <div class="definition-body">
 
-> Soit $E$ un espace de recherche, on définit un arbre de recherche de taille n sur E comme une suite de partitions $(\Delta^i)_{i=1}^n$ telle que $\Delta^1 = \{E\}$ et :
+> Soit $E$ un espace de recherche, on définit un arbre de recherche de taille n sur E comme une suite de partitions de E $(\Delta^i)_{i=1}^n$ telle que et :
 > $$ \forall i \in \llbracket 1, n-1 \rrbracket, \Delta^{i+1} \text{ raffine } \Delta^i$$
+>
+> On note $|\Delta|$ la taille de $\Delta$.
 
   </div>
 </div>
@@ -280,6 +301,36 @@ Cette première définition nous permet de faire une recherche binaire dans notr
   <div class="remarque-body">
 
 > On pourra de la même façon définir un arbre de recherche à partir d'une suite de correspondances : $\Delta^1\rightarrow...\rightarrow\Delta^n$
+
+  </div>
+</div>
+
+<div class="definition">
+  <div class="definition-title">Définition : Sous arbre de recherche</div>
+  <div class="definition-body">
+
+> Soit $E$ un espace de recherche et $\Delta = (\Delta^i)_{i=1}^n$ un arbre de recherche sur E, on définit un sous arbre de $\Delta$ un arbre $\Delta' = (\Delta'^i)_{i=k}^n$ pour un certain $k\in ⟦k, n⟧$ tel que $\forall i\in ⟦k, n⟧, \Delta'^i\text{ est une sous partition de } \Delta^i$.\
+> On dit que k est l'indice du sous arbre.
+
+  </div>
+</div>
+
+<div class="propriete">
+  <div class="propriete-title">Propriété : Taille d'un sous arbre</div>
+  <div class="propriete-body">
+
+> Soit $E$ un espace de recherche, $\Delta$ un arbre de recherche sur E et $\Delta'$ un sous arbre de $\Delta$ d'indice $k\in\mathbb{N}*$ alors :
+> $$ |\Delta'| = |\Delta| - k$$
+>
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+> Trivial en se servant uniquement de la définition.
+
+  </div>
+</div>
 
   </div>
 </div>
@@ -313,6 +364,16 @@ Cette première définition nous permet de faire une recherche binaire dans notr
   </div>
 </div>
 
+<div class="remarque">
+  <div class="remarque-title">Remarque : </div>
+  <div class="remarque-body">
+
+> Il est assez clair après cette démonstration que l'on peut sans peine améliorer la borne en $max_{i\in\Delta^1}\{|\Delta^1_i|\}$.\
+> Un sous arbre d'un arbre terminal est trivialement terminal (sous partition d'un partition maximale est maximale).
+
+  </div>
+</div>
+
 
 Le sens de cette dernière définition est assez clair normalement, on coupe récursivement notre ensemble en deux, ce qui s'apparente au parcours d'un arbre.\
 Néanmoins pour éviter des surprises désagréables lors des démonstration il est préférable de travailler avec des "arbres équilibrés".
@@ -324,6 +385,29 @@ Néanmoins pour éviter des surprises désagréables lors des démonstration il 
 > Soit E un espace de recherche et $\Delta = (\Delta_i)_{i = 1}^n \in \mathcal{P}(E)^n$ une partition de ce dernier. On dit que $\Delta$ est équilibrée si :
 > $$\forall i,j \in \llbracket 1, n \rrbracket, \big| |\Delta_i| - |\Delta_j|\big| \leq 1$$
 
+
+  </div>
+</div>
+
+<div class="proposition">
+  <div class="proposition-title">Proposition : </div>
+  <div class="proposition-body">
+
+> Une sous partition d'une partition équilibrée est elle même équilibrée.
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+<details>
+  <summary><strong>Cliquez pour voir la preuve</strong></summary>
+
+> Être équilibré pour une partition est équivalent au fait que toute paire d'élement de cette partiton vérifient une certiaine, ceci se transmet evidemment aux sous ensembles.
+
+</details>
+
+  </div>
+</div>
 
   </div>
 </div>
@@ -356,6 +440,30 @@ Néanmoins pour éviter des surprises désagréables lors des démonstration il 
   </div>
 </div>
 
+<div class="remarque">
+  <div class="remarque-title">Remarque : </div>
+  <div class="remarque-body">
+
+> Il est assez clair après cette démonstration que l'on peut sans peine améliorer la borne en $max_{i\in\Delta^1}\{log_2(|\Delta^1_i|)\}$
+
+  </div>
+</div>
+
+<div class="proposition">
+  <div class="proposition-title">Proposition : </div>
+  <div class="proposition-body">
+
+> Un sous-arbre d'un arbre equilibré est lui même équilibré
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+> Trivial en se servant de la même chose sur les sous partitions des partition équilibrées
+
+  </div>
+</div>
+
 
 On définit ainsi la notion de "couper notre ensemble en deux de façon équilibré". On pourrait montrer que de tels arbres existent, mais on exhibera plus loin une façon de le faire dans un algorithme, ce qui prouvera leur existence.
 
@@ -384,10 +492,12 @@ Nous allons par la suite beaucoup travailler avec des partitions alors, afin de 
   <div class="remarque-title">Remarque : </div>
   <div class="remarque-body">
 
-> Notez dans dans l'exemple précédent nous utilisons la convention numéro 2 pour désigner un élément de $\Delta$ par lui même.
+> Notez dans dans l'exemple précédent nous utilisons la convention numéro ** pour désigner un élément de $\Delta$ par lui même.
 
   </div>
 </div>
+
+
 
 Comme nous manipulerons beaucoup de partitons dans la suite de cette étude nous convenons maintenant que l'indice du haut correspondra systématiquement aux élément d'une famille de partition, alors que l'indice du bas lui correspond à un élément de cette partition. Si bien que $\Delta^n$ représente une partition, $\Delta^n_i$ un élément de cette partition et $\nabla^n_i$ le complémentaire de cet élément dans l'espace de recherche courant (celui que partitionne $\Delta^n$).
 
@@ -526,6 +636,26 @@ On peut donc trouver un ensemble strictement plus petit qui contient une partie 
   </div>
 </div>
 
+<div class="proposition">
+  <div class="proposition-title">Proposition : </div>
+  <div class="proposition-body">
+
+> Une sous partition d'une partition maximale est elle aussi maximale.
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+> Triviale
+
+  </div>
+</div>
+
+  </div>
+</div>
+
+
+
 ### 3. Problème projeté
 Maintenant, il ne nous reste qu'à définir la projection d'un problème
 
@@ -621,7 +751,7 @@ Nous pouvons maintenant parler librement de nos partions, en prendre des interse
   <div class="definition-title">Définition : Matrice d'interaction</div>
   <div class="definition-body">
 
-> Soit $(E,T)$ un problème et $\Delta$ une partition sur $E$ et $n$ son cardinal, on définit la matrice d'interaction de $\Delta$ comme la matrice M de $M_n({✓, ✗})$ telles que :
+> Soit $(E,T)$ un problème et $\Delta$ une partition sur $E$ et $n$ son cardinal, on définit la matrice d'interaction de $\Delta$ comme la matrice $M$ de $M_n({✓, ✗})$ telles que :
 > $$ \forall i,j in \Delta, M_{i,j} = T(\nabla_i \cap \nabla_j)
 
 
@@ -640,7 +770,7 @@ Nous pouvons maintenant parler librement de nos partions, en prendre des interse
   <div class="propriete-title">Propriété :</div>
   <div class="propriete-body">
 
-> Soit $(E,T)$ un problème et $\Delta$ une partition sur $E$ et M sa matrice de perturbation, si on a $\nabla_i$ un complémentaire d'un élément de $\Delta$ tel que $T(\nabla_i) = ✓$ alors la colonne et la ligne associée à $\nabla_i$ sont nulles (égales à ✓ partout).
+> Soit $(E,T)$ un problème et $\Delta$ une partition sur $E$ et $M$ sa matrice de perturbation, si on a $\nabla_i$ un complémentaire d'un élément de $\Delta$ tel que $T(\nabla_i) = ✓$ alors la colonne et la ligne associée à $\nabla_i$ sont nulles (égales à ✓ partout).
 
   </div>
 </div>
@@ -661,7 +791,7 @@ La proposition précédente nous pousse à définir l'objet suivant :
   <div class="definition-title">Définition : Matrice d'interaction réduite</div>
   <div class="definition-body">
 
-> Soit $(E,T)$ un problème, $\Delta$ une partition sur $E$ et M sa matrice d'interaction, on définit la matrice d'interaction réduite MR comme la matrice M à laquelle on a retiré les lignes et les colonnes correspondants à des $\nabla_i$ tels que $T(\nabla_i) = ✓$
+> Soit $(E,T)$ un problème, $\Delta$ une partition sur $E$ et $M$ sa matrice d'interaction, on définit la matrice d'interaction réduite $MR$ comme la matrice $M$ à laquelle on a retiré les lignes et les colonnes correspondants à des $\nabla_i$ tels que $T(\nabla_i) = ✓$
 
   </div>
 </div>
@@ -752,6 +882,7 @@ Algorithme DDMin(delta, test):
       // on pose nabla comme l'ensemble des complémentaires des élements de delta
       nabla = [complementaire(delta_i, E) pour delta_i dans delta]
 
+      // se calcule en parallèle
       resultats = [test(nabla_i) pour nabla_i dans nabla]
 
 
@@ -763,6 +894,7 @@ Algorithme DDMin(delta, test):
           // certains complementaire échouent, on va récurser
           I = La liste des indices de nabla tels que test(nabla[i]) == ✗
 
+          // se calcule en parallèle
           M = generate_test_matrix(nabla, I, conj) 
           // M est égale à la matrice n*n des test(nabla_i inter nabla_j)
 
@@ -773,7 +905,7 @@ Algorithme DDMin(delta, test):
               // l'ensemble sur lequel on va récurser
               preparation = intersection de nabla[i] pour i
 
-              // on garde bien la même structure de partition
+              // on garde bien la même structure de partition (sous partition)
               next = [delta_i pour delta_i dans delta tel que (delta_i inclu dans preparation)]
 
               retourner DDMin(next, test)
@@ -789,7 +921,7 @@ Algorithme DDMin(delta, test):
               preparation1 = intersection de nabla[i] pour i dans I
               preparation2 = intersection de nabla[j] pour j dans J
               
-              // on fait bien attention à garder la structure de partition du départ
+              // on fait bien attention à garder la structure de partition du départ (sous partition)
               next1 = [delta_i pour delta_i dans delta tel que (delta_i inclu dans preparation1)]
               next2 = [delta_j pour delta_j dans delta tel que (delta_j inclu dans preparation2)]
 
@@ -815,29 +947,23 @@ Algorithme DDMin(delta, test):
 
 ```pseudo 
 Algorithme RDDMin(E, test):
-    // pour stocker les résultats
-    atomes = []
 
-    // changera à chaque itération
-    espace_de_recherche_actuel = E
-
-    Tant que test(espace_de_recherche_actuel) == ✗:
+    Si test(E) == ✗:
         // on trouve des atomes de l'espace_de_recherche_actuel
-        nouveaux_atomes = DDMin([espace_de_recherche_actuel], test)
-
-        // on ajoute les nouveaux résultats
-        atomes += nouveaux_atomes
-
+        atomes = DDMin([E], test)
+        
         // on retire les atomes trouvés de l'espace_de_recherche_actuel
-        a_retirer = la concaténation de nouveaux_atomes
-        espace_de_recherche_actuel = complémentaire(a_retirer, espace_de_recherche_actuel)
+        a_retirer = la concaténation de atomes
+        espace_de_recherche_réduit = complémentaire(a_retirer, E)
 
-    
-    retourner atomes
+        retourner atomes union RDDMin(espace_de_recherche_réduit, test)
+
+    Sinon :
+        retourner []
 ```
 
 
-# IV. Preuves de Terminaison
+# IV. Preuves de Terminaison et de correction
 
 Avant toute chose nous allons faire une hypothèse simplificatrice sur la taille des problèmes projetés dans la suite des démonstrations, en gardant en tête que cette hypothèse n'est pas nécessaire et qu'une meilleure implémentation de l'algorithme permettrait de s'en débarrasser.
 
@@ -854,7 +980,7 @@ Avant toute chose nous allons faire une hypothèse simplificatrice sur la taille
   <div class="remarque-title">Remarque : </div>
   <div class="remarque-body">
 
-> Nous verrons plus tard une relation entre le cardinal des atomes et le cardinal maximum d'un arbre de partition grossière, qui permettra de se rendre compte que cette hypothèse n'est pas si forte qu'il n'y parait dans le cas d'atomes de petit cardinal.
+> Nous verrons plus tard une relation entre le cardinal des atomes projetés et le cardinal maximum d'un arbre de partition grossière, qui permettra de se rendre compte que cette hypothèse n'est pas si forte qu'il n'y parait dans le cas d'atomes de petit cardinal.
 
   </div>
 </div>
@@ -910,11 +1036,12 @@ Avant de s'attaquer à la preuve à proprement parler, démontrons une propriét
 ## L'algorithme DDMin:
 
 <div class="proposition">
-  <div class="proposition-title">Proposition : L'algorithme DDMin termine toujours et renvoie au moins un atome du problème d'entrée </div>
+  <div class="proposition-title">Proposition : Terminaison et Correction de DDMin </div>
   <div class="proposition-body">
 
 > Démo :\
-> On démontre par récurrence : Soit pour tout $N\in\mathbb{N}^*, P(N)$, l'assertion : $\forall (E, T)\text{ problème}, |E| \leq N \Rightarrow DDMin(\{E\}, T)\text{ termine et retourne une partie non vide des atomes de E}$
+> Soit pour tout $N\in\mathbb{N}^*, P(N)$, l'assertion : $\forall (E, T)\text{ problème}, |E| \leq N \Rightarrow DDMin(\{E\}, T)\text{ termine et retourne une partie non vide des atomes de E}$.\
+> Montrons $\forall N\in\mathbb{N}^*, P(N)$ par récurrence :
 > 
 > ### Initialisation :
 > Si $N = 1$, soit $(E, T)$ un problème tel que $|E| \leq 1$, comme $T(E) = ✗ \neq ✓ = T(\varnothing)$ on a forcément $E\neq\varnothing$ et la seule partition de E est $\{E\}$, elle est bien grossière (cf. la définition) et maximale, on a donc E, atome de E et is_maximal(E) == True d'où $DDMin(\{E\}, T) = [E]$ et donc P(1)
@@ -936,8 +1063,8 @@ Avant de s'attaquer à la preuve à proprement parler, démontrons une propriét
 > $$\forall i \in I_{\Delta}, b\subseteq\nabla^n_i$$
 >- Et donc
 > $$b\in\bigcap_{i\in I_{\Delta}} \nabla^n_i$$
->- Ainsi si $Next = \bigcap_{i\in I_{\Delta^n}} \nabla^n_i$$ on a bien $T(Next) = ✗$ et donc $(Next, T)$ est un sous problème de $(E, T)$ qui a pour atomes les atomes de $(E, T)$ inclus dans $Next$, qui est non vide. De plus, clairement $|Next| \lt |E|$, d'où $|Next| \leq n$
->- On retourne $DDMin(Next, T)$, qui d'après P(n) termine et renvoie une partie non vides des atomes de $(Next, T)$.\
+>- Ainsi si $Next = \bigcap_{i\in I_{\Delta^n}} \nabla^n_i$ on a bien $T(Next) = ✗$ et donc $(Next, T)$ est un sous problème de $(E, T)$ qui a pour atomes les atomes de $(E, T)$ inclus dans $Next$, qui est non vide. De plus, clairement $|Next| \lt |E|$, d'où $|Next| \leq N$
+>- On retourne $DDMin(Next, T)$, qui d'après $P(N)$ termine et renvoie une partie non vides des atomes de $(Next, T)$.\
 >- Ainsi le programme termine et retourne bien une partie non vide des atomes de $(E, T)$
 
 
@@ -945,72 +1072,175 @@ Avant de s'attaquer à la preuve à proprement parler, démontrons une propriét
 >- Donc $\forall i_0\in I_{\Delta^n}, T(\nabla^n_i\cap\nabla^n_{i_0}) = ✗\iff b_1\subseteq\nabla^n_{i_0}$
 >- D'où $I_i = \{i_0 \in I_{\Delta^n} \text{ | } T(\nabla^n_i\cap\nabla^n_{i_0}) = ✗\} = \{i_0 \in I_{\Delta^n} \text{ | } b_1\subseteq\nabla^n_{i_0} \}$
 >- Et donc $b_1 \subseteq Next1 = \bigcap_{i_0\in I_i} \nabla^n_{i_0}$, c'est même le plus petit sous ensemble de $\Delta^n$ le contenant au sens de l'inclusion.
->- De la même façon on a $b_2 \subseteq Next2 = ""$
->- On a comme pour $Next$ : $|Next1|, |Next2| \leq n$ et $(Next1, E)$, $(Next2, T)$ sont des sous problèmes de $(E, T)$, donc $DDMin(Next1, T)$ et $DDMin(Next2, T)$ terminent et renvoient chacun une partie non vides des atomes chacun des problèmes.
+>- De la même façon on a $b_2 \subseteq Next2 = \bigcap_{i_0\in I_j}$, avec $I_j$ défini de la même façon que $I_i$
+>- On a comme pour $Next$ : $|Next1|, |Next2| \leq N$ et $(Next1, E)$, $(Next2, T)$ sont des sous problèmes de $(E, T)$, donc d'après $P(N)$ : $DDMin(Next1, T)$ et $DDMin(Next2, T)$ terminent et renvoient chacun une partie non vides des atomes chacun des problèmes.
 >- En faisant l'union des deux on obtient bien une partie non vides des atomes de $(E, T)$.
 >
-> D'où $P(n+1)$, ce qui clot la récurrence.
+> D'où $P(N+1)$, ce qui clot la récurrence.
 >
-> $\{P(n)\text{ | } n\in \mathbb{N}^* \}$ implique directement la propriété.
->
+> $\forall N\in \mathbb{N}^* P(N)$ implique directement la terminaison et la correction.\
 > Ce qui conclut.
 
   </div>
 </div>
 
+<div class="proposition">
+  <div class="proposition-title">Proposition : Terminaison et Correction de RDDMin</div>
+  <div class="proposition-body">
 
-
-### Invariants
-
-> **Invariant principal :** après chaque itération de la boucle, les sommets extraits de $Q$ possèdent leur distance minimale définitive.
-
-Tu peux aussi énoncer des **lemmes** intermédiaires si nécessaire :  
-
-> **Lemme 1.** Soit (E, )
-
-**Preuve (esquisse) :**  
-On montre par induction sur le nombre de sommets extraits :  
-
-- **Base :** $d[s] = 0$ est correct à l’initialisation.  
-- **Hérédité :** supposons l’invariant vrai jusqu’au $k$-ième sommet extrait.  
-  À l’étape $k+1$, on choisit $u$ de distance minimale, donc aucune mise à jour future ne peut améliorer $d[u]$.  
-- **Conclusion :** par induction, chaque sommet extrait est correct.  
-
-Ainsi, à la fin de l’exécution :  
-
+> Soit pour tout $N\in\mathbb{N}*$, $P(N)$, l'assertion : $\forall (E,T)\text{ bien posé }, |E| \leq N \Rightarrow RDDMin(E,T) = B$ où $B$ désigne les atomes du problème.\
+>Démontrons $\forall N\in\mathbb{N}*, P(N)$ par récurrence:
+>
+> ### Initialisation :
+> Soit $(E, T)$ un problème bien posé et B ses atomes tel que $|E| \leq 1$, comme précédemment on a forcément $|E| = 1$ et $B = \{E\}$.
+> Alors $DDMin([E], T)$ va nécessairement retourner $[E]$ et $RDDMin(\varnothing, T)$ retourne la liste vide, d'où $RDDMin(E, T) = [E]$ et donc P(1)$
+> 
+> ### Hérédité :
+> Soit $N\in\mathbb{N}^*$ tel que $P(N)$, montrons $P(N+1)$ :
+>
+> Soit $(E, T)$ un problème bien posé et B ses atomes tel que $|E| \leq N+1$.\
+> Soit $B'= DDMin([E], T)$, on a d'après la proposition précédente, $B' \subseteq B$ et $B' \neq \varnothing$.\
+> Soit $R = \bigcup_{b\in B'} b$, on a donc $|R| >= 1$. D'où si $E' = E\setminus R$ :
 $$
-\forall v \in V, \quad d[v] = d^*(v)
+\begin{align}
+|E'| &= |E\setminus R|\notag \\
+     &= |E| - |R|\tag{car $R\subseteq E$}\\
+     &\leq N \notag
+\end{align}     
 $$
+> Si $B' = B$, alors $T(E') = ✓$ et le programme termine en renvoyant $B' = B$.
+> Sinon on a $T(E') = ✗$ et alors $(E', T)$ est un sous problème de $(E, T)$, et l'ensemble de ses atomes est exactement :
+$$
+\begin{align}
+B_2 &=\{b\in B\text{ | } b \subseteq E'\} \tag{D'après propriété ** } \\
+     &= \{b\in B \text{ | } b\nsubseteq R\} \tag{élements de B disjoints (problème bien posé)} \\
+     &= \{b\in B \text{ | } b\not\in B'\} \tag{$R = \bigcup_{b\in B'} b$ + éléments de B disjoints}\\
+     &= B\setminus B'
+\end{align}  
+$$
+> Comme $|E'| \leq N$, d'après $P(N)$ : $RDDMin(E', T)$ termine et retourne $B_2$, donc $RDDMin(E, T)$ termine et retourne $B'\cup B_2 = B' \cup (B\setminus B') = B$ (car $B' \subseteq B$). \
+> D'où $P(N+1)$, ce qui clot la récurrence.
+>
+> $\forall N\in \mathbb{N}^* P(N)$ implique directement la terminaison et la correction.\
+> Ce qui conclut.
 
-Ce qui prouve la **correction** de l’algorithme. $\square$
+  </div>
+</div>
 
----
+# VI. Structure de DDMin
 
-## V. Preuve de Correction et de Terminaison 
+Le découpage récursif de chaque élément de la partition en 2 dans l'algorithme DDMin peut fortement faire penser à une dichotomie, cette remarque est essentielle et permettra de donner une borne supérieure pour la compléxité de DDMin
 
-### Terminaison de DDMin:
+<div class="proposition">
+  <div class="proposition-title">Proposition : Structure arborescente de DDMin</div>
+  <div class="proposition-body">
 
+> Soit $P$ une partition d'un problème, alors il existe $n\in\mathbb{N}*$ et un arbre $\Delta = (\Delta^i)_{i=0}^n$ terminal tels que dans tous les parcours de la boucle principale de $DDMin(P, T)$ après l'appel à split : $delta = \Delta^i$ avec $i\in\mathbb⟦1, n⟧$ le nombre de passage dans la boucle principale.\
+> Si la partition passée en paramètre à $DDMin$ est équilibrée alors $\Delta$ l'est aussi.\
+>
+> Lors d'un appel récursif, l'arbre associé à $DDMin(P', T)$, où $P'$ est un sous partition d'une certaine partition $\Delta^i\in\Delta$, est un sous arbre de $\Delta$ d'indice $i$.
+>
+> De plus, si $delta$ est une sous partition de $\Delta^i$ alors si $\Delta$ est n'est pas maxiamale : $spilt(delta)[0]$ est une sous partition de $\Delta^{i+1}$
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+<details>
+  <summary><strong>Cliquez pour voir la preuve</strong></summary>
+
+> TODO
+
+</details>
+
+  </div>
+</div>
+  </div>
+</div>
+
+<div class="remarque">
+  <div class="remarque-title">Remarque : </div>
+  <div class="remarque-body">
+
+> On notera que ici la numérotation de l'arbre commence à 0 
+
+  </div>
+</div>
 
 ## VI. Analyse de Complexité
 
-### Complexité en Temps
+### Complexité du chemin critique
 
-Décompose les coûts étape par étape :  
+<div class="proposition">
+  <div class="proposition-title">Proposition : Complexité critique de DDMin en $2ln_2(n)</div>
+  <div class="proposition-body">
 
-1. **Initialisation :**  
-   $O(n)$ affectations pour $d[v]$ et `parent[v]`.
+> La longueur de la plus longue séquence d'appels à la fonction test dans une execution de DDMin sur un problème avec un espace de recherche de cardinal N vaut au plus $\lceil 2ln_2(N)\rceil$.
 
-2. **Boucle principale :**
-   - Extraction du minimum : $O(\log n)$ avec un tas binaire (répété $n$ fois → $O(n \log n)$).  
-   - Relaxations : $O(m)$ mises à jour potentielles, chacune coûte $O(\log n)$ → $O(m \log n)$.  
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
 
-**Bilan :**  
+<details>
+  <summary><strong>Cliquez pour voir la preuve</strong></summary>
 
-$$
-T(n,m) = O(n \log n + m \log n) = O((n+m)\log n)
-$$
+> Soit $(E,T)$ un problème, $P$ une partition de E et $\mathcal{A} = \Delta^0\rightarrow...\rightarrow\Delta^n$ où $\Delta^0 = P$ l'arbre terminal associé à l'exection de $DDMin(P, T)$.\
+> On montre par récurrence forte sur $n\geq 0$ que la longueur de la plus longue séquence d'appels à test est inférieur à 2n, on note cette assertion $P(n)$
+>
+> ## Initialisation:
+> Si $n = 0$ comme l'arbre est terminal on a alors $\Delta^0$ maximale et donc le programme retourne immédiatement sans executer de fonction test, d'où $P(0)$
+>
+> ## Hérédité:
+> Soit $n\in\mathbb{N}$ tel que $\forall m\leq n, P(m)$, montrons $P(n+1)$:
+>
+> Soit k le nombre de passage dans la boucle principale de $DDMin$, on note $delta_i$ la valeur de $delta$ dans chaque boucle (en numérotant les boucles de 1 à k).\
+> En se servant de la structure de DDMin, on sait que $\forall i\in ⟦1, k⟧, delta_i = \Delta^i$ et ainsi on a $k\leq n$.
+> On notera que, par boucle, la plus grande séquence d'appels à test est de longueur 2, un pour les nabla et un pour la matrice (qui peut dans certains cas ne pas executer de tests du tout).
+>- Si on termine en sortant de la boucle, on a appelé la fonction test au plus $2k$ fois et on conclut.
+>
+>- Sinon soit $i\in⟦1, k⟧$ le numéro de la boucle dans laquelle on fait un appel récursif.
+>- Si on fait un seul appel récursif :
+>   - $next1$ est une sous partition de $delta_i$ donc de $\Delta^i$, d'où l'arbre associé à $DDMin(next1, T)$ un sous arbre de $\Delta$ d'indice i et $m = (n+1) - (i+1)$ sa taille (on a des arbres qui commencent à zéro).\
+>   - Donc d'après P(m) (on a bien $m\leq n$) la séquence d'appel la plus longue dans $DDMin(next1, T)$ est inférieure à 2m et donc au total on a une séquence maximale d'une longueur $l\leq 2m + 2i \leq 2n$ et on conclut.
+>- Si on en fait deux la démonstration est essentiellement la même, il faudra seulement prendre en compte le max des deux séquences d'appel qui sont toutes deux majorées par 2m.
+> D'où P(n+1), ce qui clot la récurrence.
+>
+> Or dans le cas où P = \{E\}, comme P est équilibré d'après la structure de DDMin $\mathcal{A}$ est équilibré.\
+> Et d'après la proposition ** on a $|\mathcal{A}| = n \leq \lceil ln_2(|E|)\rceil$.\
+> Donc la longueur de la plus longue séquence d'appels à la fonction test dans l'execution de $DDMin(\{E\}, T)$ est d'au plus $\lceil 2ln_2(N)\rceil$.
+>
+> Ce qui conclut.
 
-> Si $m = O(n)$ (graphe peu dense), on peut simplifier : $T = O(n \log n)$.
+</details>
+
+  </div>
+</div>
+
+  </div>
+</div>
+
+<div class="proposition">
+  <div class="proposition-title">Proposition : Temps d'attente des atomes de cardinal 1</div>
+  <div class="proposition-body">
+
+> Soit $(E, T)$ un problème et $B$ ses atomes, soit $b\in B$ de cardinal 1, alors $RDDMin$ trouve $b à la première itération et le chemin critique jusqu'au retour d'une liste contenant $b$ contient moins de $\lceil ln_2(N)\rceil + 1$ appels à la fonction test
+
+<div class="demo">
+  <div class="demo-title">Démo :</div>
+  <div class="demo-body">
+
+<details>
+  <summary><strong>Cliquez pour voir la preuve</strong></summary>
+
+> La démonstration est essentiellement la même que la précédente en notant en plus que toute partition non triviale d'un problème qui contient au moins un atome de cardinal 1 est sépartante. A partir de là, chaque appel à DDMin ne peut faire qu'une itération dans la boucle avant de terminer (soit par maximalité, soit parce que la partition est séparante), et à chaque fois on transmet une partition de cardinal 1, on la split en 2, un des deux coté fail (parce que l'atome de cardinal 1 est forcément d'un des deux côté (d'où la suffisance)), le calcul de la matrice dans le cas où l'on a une partition à deux éléments ne nécessite pas d'appel à test (quand on divise en deux on a $\nabla_1 = \Delta_2$ et $\nabla_2 = \Delta_1$, donc les intersection sont soit vides soit triviales ($\nabla_1\cap\nabla_1 = \nabla_1$, on connait déjà le resultat)) et puis on fait un appel récursif sur l'un des deux nabla ou sur les deux qui se font en parallèle. Ensuite la structure de DDMin montre qu'il y a eu au plus $\lceil ln_2(N)\rceil$ appels récursifs, ce qui conclut.
+
+</details>
+
+  </div>
+</div>
+
+  </div>
+</div>
 
 ### Complexité en Espace
 
