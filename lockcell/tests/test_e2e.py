@@ -12,6 +12,8 @@ from lockcell import Lockcell, TestConfig, Status
 
 logger = logging.getLogger(__name__)
 
+ENDPOINT = os.environ["Grpc__Endpoint"]
+
 
 def _assert_same_elements(res, expected):
     assert {tuple(sorted(x)) for x in res} == {tuple(sorted(pb)) for pb, _ in expected}
@@ -54,9 +56,7 @@ def test_random(
     search_space = config.generate_search_space()
     logger.debug(f"[INFO] Searchspace generated :\n {search_space}")
 
-    with Lockcell(
-        endpoint="172.29.94.180:5001", config=config, environnement={"pip": ["numpy"]}
-    ) as lock:
+    with Lockcell(endpoint=ENDPOINT, config=config, environnement={"pip": ["numpy"]}) as lock:
         lock.run_rddmin()
         logger.info("Started")
         start = time.time()
@@ -90,9 +90,7 @@ def test_robust():
     )
     config.set_mode("Analyse")
 
-    with Lockcell(
-        endpoint="172.29.94.180:5001", config=config, environnement={"pip": ["numpy"]}
-    ) as lock:
+    with Lockcell(endpoint=ENDPOINT, config=config, environnement={"pip": ["numpy"]}) as lock:
         lock.run_rddmin()
         logger.info("Started")
         start = time.time()
